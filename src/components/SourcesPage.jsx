@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { timeAgo, storyText } from "../constants/theme.js";
 import { SOURCE_MAP } from "../constants/sources.js";
-import { useSize } from "./Shared.jsx";
+import { useSize } from "../hooks/useSize.js";
 
 const TREE_BELOW = 760;   // narrower than this, the map is a vertical branch tree
 const PANEL_W    = 380;   // width of the source's items panel
