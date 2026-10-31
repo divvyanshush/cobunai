@@ -101,7 +101,7 @@ function RadialMap({ tree, w, h, loading, selected, onSelect }) {
 
       <div className="map-center" style={{ left:cx, top:cy }}><span className="core"/></div>
       <div className="meta" style={{ position:"absolute", left:cx, top:cy + 18, transform:"translateX(-50%)", whiteSpace:"nowrap" }}>
-        {loading ? "Loading" : "Sources"}
+        {loading ? "Loading" : "Cobun"}
       </div>
 
       {cats.map(c => (
@@ -170,7 +170,7 @@ function TreeMap({ tree, loading, open, onToggle }) {
     <div className="tree">
       <div style={{ display:"flex", alignItems:"center", gap:12, height:40 }}>
         <span style={{ width:9, height:9, borderRadius:"50%", background:"var(--text)", flexShrink:0 }}/>
-        <span style={{ fontSize:15, fontWeight:600 }}>Sources</span>
+        <span style={{ fontSize:15, fontWeight:600 }}>Cobun</span>
         {loading && <span className="meta">Loading</span>}
       </div>
 

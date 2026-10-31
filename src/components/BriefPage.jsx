@@ -113,12 +113,11 @@ export function BriefPage({ items, isMobile }) {
 
             {ready && !summaries.length && <div className="empty meta">No brief yet — check back soon</div>}
 
-            {ready && summaries.length > 0 && <>
-              <h2 className="block-title rise" style={{ "--i":2 }}>Summary</h2>
-              <ul className="summary">
+            {ready && summaries.length > 0 && (
+              <ul className="summary" aria-label="What changed today">
                 {summaries.map((cat, i) => <SummaryRow key={cat.id} cat={cat} pool={pool} i={i}/>)}
               </ul>
-            </>}
+            )}
           </div>
         </div>
       </div>

@@ -7,6 +7,9 @@
   --sans:'Instrument Sans', system-ui, -apple-system, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, monospace;
   --ease:cubic-bezier(.2,.7,.2,1);
+  /* One page grid: the top bar and every page share these side margins */
+  --gutter:20px;
+  --page-max:1440px;
 
   font-family:var(--sans);
   line-height:1.5;
@@ -15,6 +18,9 @@
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
+
+@media (min-width:641px){:root{--gutter:32px}}
+@media (min-width:1024px){:root{--gutter:40px}}
 
 html,body{overflow:hidden;margin:0;padding:0;height:100%;background:var(--bg);color:var(--text)}
 body{min-width:320px}
@@ -42,8 +48,10 @@ button:focus{outline:none}
 .rise{animation:rise .7s var(--ease) both;animation-delay:calc(var(--i,0) * 50ms)}
 
 /* ── Top bar ────────────────────────────────────────────── */
-.topbar{height:52px;min-height:52px;display:flex;align-items:center;gap:20px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--bg);flex-shrink:0;user-select:none;position:relative}
-.tabs{display:flex;align-items:stretch;height:100%;flex:1}
+/* Hairline only once the page scrolls under it */
+.topbar{height:56px;min-height:56px;display:flex;align-items:center;gap:20px;padding:0 max(var(--gutter), calc((100vw - var(--page-max)) / 2 + var(--gutter)));border-bottom:1px solid transparent;background:var(--bg);flex-shrink:0;user-select:none;position:relative;z-index:30;transition:border-color .3s}
+.topbar[data-scrolled="true"]{border-bottom-color:var(--line)}
+.tabs{display:flex;align-items:stretch;height:100%;margin-left:auto;margin-right:-12px}
 .tab{position:relative;padding:0 12px;font-size:14px;color:var(--muted);transition:color .25s}
 .tab:hover{color:var(--sub)}
 .tab[aria-selected="true"]{color:var(--text)}
@@ -53,13 +61,14 @@ button:focus{outline:none}
 /* ── Brief ──────────────────────────────────────────────── */
 .page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);animation:fade .4s ease both}
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden}
-.brief{max-width:720px;margin:0 auto;padding:12px 24px 120px}
+.brief{padding:12px var(--gutter) 120px}
 /* Wide screens: intro and graphic stay in view on the left, the summary reads on the right,
    both on the same left edge as the logo */
 @media (min-width:1024px){
-  .brief{max-width:1320px;margin:0;padding:0 20px 120px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
+  .brief{max-width:var(--page-max);margin:0 auto;padding:0 var(--gutter) 120px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
   .brief-intro{position:sticky;top:0;padding-bottom:40px}
-  .brief-main{padding-top:58px}
+  /* first takeaway's label sits level with the date */
+  .brief-main{padding-top:16px}
   .brief .signal{margin-bottom:0}
 }
 
@@ -77,7 +86,6 @@ button:focus{outline:none}
 .signal .halo{fill:none;stroke:var(--accent);stroke-opacity:.5;opacity:0;animation:fade .5s ease 1.5s forwards, breathe 3.2s ease-in-out 2s infinite}
 
 /* Summary: one line per topic, a label column beside the text on wide screens */
-.block-title{font-size:22px;line-height:1.2;font-weight:500;letter-spacing:-.02em;margin:0;padding-bottom:14px;border-bottom:1px solid var(--line-2);color:var(--text)}
 .summary{list-style:none;margin:0 0 80px;padding:0}
 .sum-row{display:grid;grid-template-columns:104px 1fr;gap:6px 24px;padding:20px 0;border-bottom:1px solid var(--line)}
 .sum-label{padding-top:6px}
@@ -100,7 +108,7 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .retry{margin-left:10px;color:var(--text);text-decoration:underline;text-underline-offset:3px}
 
 /* ── Sources ────────────────────────────────────────────── */
-.src-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 24px;flex-shrink:0}
+.src-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px var(--gutter);flex-shrink:0}
 
 .map .edge{fill:none;stroke:var(--text);stroke-width:1;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s var(--ease) forwards;animation-delay:calc(var(--i,0) * 22ms);transition:stroke .3s,stroke-opacity .3s}
 .map .edge{stroke-opacity:.2}
@@ -144,7 +152,7 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .tree .item:hover{background:none}
 .tree .item:hover .item-title{text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line-2)}
 
-.tree{padding:4px 20px 40px}
+.tree{padding:4px var(--gutter) 40px}
 .tree-row{display:flex;align-items:center;gap:10px;width:100%;height:44px;text-align:left;color:var(--sub);transition:color .2s}
 .tree-row:hover,.tree-row[aria-expanded="true"]{color:var(--text)}
 .tree-row .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;transition:transform .3s var(--ease),background .2s}
@@ -156,17 +164,16 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .tree-items{margin:0 0 10px 2px;padding-left:16px;border-left:1px solid var(--line-2);animation:rise .45s var(--ease) both}
 
 @media (max-width:640px){
-  .topbar{padding:0 14px;gap:10px}
+  .topbar{gap:10px}
   .tab{padding:0 10px}
   .tab::after{left:10px;right:10px}
-  .brief{padding-left:20px;padding-right:20px}
+  .tabs{margin-right:-10px}
   .hero{margin:24px 0 22px}
   .hero-sub{font-size:16.5px}
   .signal{height:92px;margin-bottom:56px}
   .sum-row{grid-template-columns:1fr;padding:18px 0}
   .sum-label{padding-top:0}
   .sum-text{font-size:16.5px}
-  .src-head{padding:14px 20px}
 }
 
 @media (prefers-reduced-motion:reduce){
