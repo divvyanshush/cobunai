@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-/* Colour tokens are set on :root from the JS theme (App.jsx); these are the dark defaults for first paint. */
+/* Monochrome, after the Cobun AI moodboard: black, white hairlines, one electric-blue accent */
 :root {
   --bg:#000000; --surface:#0a0a0a; --hover:#111111; --line:#1c1c1c; --line-2:#2a2a2a;
   --text:#f2f2f0; --sub:#a6a6a3; --muted:#6f6f6c; --accent:#4d6bff;
@@ -49,9 +49,6 @@ button:focus{outline:none}
 .tab[aria-selected="true"]{color:var(--text)}
 .tab::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:1px;background:var(--text);transform:scaleX(0);transition:transform .45s var(--ease)}
 .tab[aria-selected="true"]::after{transform:scaleX(1)}
-.tab-count{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-left:6px}
-.signin{font-size:13px;font-weight:500;padding:6px 14px;border:1px solid var(--line-2);border-radius:999px;color:var(--text);transition:border-color .2s,background .2s}
-.signin:hover{border-color:var(--text)}
 
 /* ── Brief ──────────────────────────────────────────────── */
 .page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);animation:fade .4s ease both}
@@ -91,21 +88,7 @@ a.sum-text:hover .sum-head{text-decoration:underline;text-decoration-thickness:1
 a.sum-text:hover .story-arrow{opacity:1;transform:none}
 
 
-.story{position:relative;display:flex;gap:16px;padding:14px 0}
-.story-link{flex:1;min-width:0;display:block}
-.story-title{font-size:17px;line-height:1.42;font-weight:500;letter-spacing:-.01em;color:var(--text);margin:6px 0 0;overflow-wrap:anywhere;transition:color .2s}
-.story-link:visited .story-title{color:var(--sub)}
 .story-arrow{display:inline-block;margin-left:6px;color:var(--accent);opacity:0;transform:translate(-4px,4px);transition:opacity .25s,transform .35s var(--ease)}
-.story-link:hover .story-arrow{opacity:1;transform:none}
-.story-link:hover .story-title{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;text-decoration-color:var(--line-2)}
-.story-why{font-size:15px;line-height:1.55;color:var(--sub);margin:6px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-
-.save{flex-shrink:0;align-self:flex-start;margin-top:2px;padding:4px;line-height:0;color:var(--muted);opacity:0;transition:opacity .2s,color .2s,transform .2s var(--ease)}
-.story:hover .save,.save:focus-visible{opacity:1}
-.save:hover{color:var(--text)}
-.save:active{transform:scale(.85)}
-.save[aria-pressed="true"]{opacity:1;color:var(--accent)}
-@media (hover:none){.save{opacity:.55}}
 
 .more{display:inline-flex;align-items:center;gap:8px;padding:10px 0 14px;transition:color .2s}
 .more:hover{color:var(--text)}
@@ -172,22 +155,17 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .tree-row:disabled{opacity:.32;cursor:default}
 .tree-items{margin:0 0 10px 2px;padding-left:16px;border-left:1px solid var(--line-2);animation:rise .45s var(--ease) both}
 
-/* ── Saved ──────────────────────────────────────────────── */
-.saved{max-width:760px;padding:24px 20px 96px}
-
 @media (max-width:640px){
   .topbar{padding:0 14px;gap:10px}
   .tab{padding:0 10px}
   .tab::after{left:10px;right:10px}
-  .brief,.saved{padding-left:20px;padding-right:20px}
+  .brief{padding-left:20px;padding-right:20px}
   .hero{margin:24px 0 22px}
   .hero-sub{font-size:16.5px}
   .signal{height:92px;margin-bottom:56px}
   .sum-row{grid-template-columns:1fr;padding:18px 0}
   .sum-label{padding-top:0}
   .sum-text{font-size:16.5px}
-  .story-title{font-size:16px}
-  .story-why{font-size:14.5px}
   .src-head{padding:14px 20px}
 }
 

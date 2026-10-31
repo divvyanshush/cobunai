@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { DATA_URL, hasText, updatedAgo, decode } from "../constants/theme.js";
 import { Signal } from "./Signal.jsx";
-import { usePullToRefresh, PullIndicator } from "./Shared.jsx";
+import { usePullToRefresh } from "../hooks/usePullToRefresh.js";
+import { PullIndicator } from "./Shared.jsx";
 
 const EVEN = Array(26).fill(0.35);
 const SHORT = { model:"Models", tool:"Tools", research:"Research", repo:"Repos", discuss:"Community", funding:"Business" };

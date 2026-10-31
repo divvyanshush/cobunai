@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { useSize } from "./Shared.jsx";
+import { useSize } from "../hooks/useSize.js";
 
 // Many sources converging into one brief: a hairline per source, brighter the more it carried today.
 // Lines draw in once, then a few accent pulses keep travelling toward the focal point.
