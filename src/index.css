@@ -60,13 +60,12 @@ button:focus{outline:none}
 
 /* ── Brief ──────────────────────────────────────────────── */
 .page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);animation:fade .4s ease both}
-.scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none}
 .brief{padding:12px var(--gutter) 120px}
-/* Wide screens: intro and graphic stay in view on the left, the summary reads on the right,
-   both on the same left edge as the logo */
+/* Wide screens: intro and graphic on the left, the summary on the right; the page scrolls as one */
 @media (min-width:1024px){
   .brief{max-width:var(--page-max);margin:0 auto;padding:0 var(--gutter) 120px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
-  .brief-intro{position:sticky;top:0;padding-bottom:40px}
+  .brief-intro{padding-bottom:40px}
   /* first takeaway's label sits level with the date */
   .brief-main{padding-top:16px}
   .brief .signal{margin-bottom:0}
