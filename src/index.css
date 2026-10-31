@@ -61,11 +61,11 @@ button:focus{outline:none}
 /* ── Brief ──────────────────────────────────────────────── */
 .page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);animation:fade .4s ease both}
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:none}
-.brief{padding:12px var(--gutter) 120px}
-/* Wide screens: intro and graphic on the left, the summary on the right; the page scrolls as one */
+.brief{padding:12px var(--gutter) 64px}
+/* Wide screens: intro and graphic stay in view on the left while the summary scrolls on the right */
 @media (min-width:1024px){
-  .brief{max-width:var(--page-max);margin:0 auto;padding:0 var(--gutter) 120px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
-  .brief-intro{padding-bottom:40px}
+  .brief{max-width:var(--page-max);margin:0 auto;padding:0 var(--gutter) 64px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
+  .brief-intro{position:sticky;top:0;padding-bottom:40px}
   /* first takeaway's label sits level with the date */
   .brief-main{padding-top:16px}
   .brief .signal{margin-bottom:0}
@@ -85,7 +85,7 @@ button:focus{outline:none}
 .signal .halo{fill:none;stroke:var(--accent);stroke-opacity:.5;opacity:0;animation:fade .5s ease 1.5s forwards, breathe 3.2s ease-in-out 2s infinite}
 
 /* Summary: one line per topic, a label column beside the text on wide screens */
-.summary{list-style:none;margin:0 0 80px;padding:0}
+.summary{list-style:none;margin:0;padding:0}
 .sum-row{display:grid;grid-template-columns:104px 1fr;gap:6px 24px;padding:20px 0;border-bottom:1px solid var(--line)}
 .sum-label{padding-top:6px}
 .sum-text{display:block;margin:0;font-size:18px;line-height:1.55;overflow-wrap:anywhere}
