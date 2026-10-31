@@ -12,7 +12,7 @@ function getSession(k,d){ try{ const v=sessionStorage.getItem(k); return v===nul
 export default function App() {
   const [page,      setPageRaw]  = useState(()=>{
     // Old sessions and links can still say "feed" or "saved"
-    const p = new URLSearchParams(window.location.search).get("tab") || getSession("pulse-page","brief");
+    const p = new URLSearchParams(window.location.search).get("tab") || getSession("cobun-page","brief");
     return TABS.includes(p) ? p : "brief";
   });
   const touchStartX = useRef(0);
@@ -40,7 +40,7 @@ export default function App() {
   const setPage = useCallback((p)=>{
     setPageRaw(p);
     setScrolled(false);
-    try{ sessionStorage.setItem("pulse-page",p); }catch{ /* storage blocked: the tab just isn't remembered */ }
+    try{ sessionStorage.setItem("cobun-page",p); }catch{ /* storage blocked: the tab just isn't remembered */ }
   },[]);
 
   const loadFeed = useCallback(async()=>{
