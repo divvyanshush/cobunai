@@ -37,7 +37,7 @@ function SummaryRow({ cat, pool, i }) {
   </>;
   return (
     <li className="sum-row rise" style={{ "--i":i + 3 }}>
-      <span className="meta sum-label">{SHORT[cat.id] || cat.label}</span>
+      <span className="label sum-label">{SHORT[cat.id] || cat.label}</span>
       {item
         ? <a className="sum-text" href={item.link} target="_blank" rel="noreferrer">{body}</a>
         : <p className="sum-text">{body}</p>}
@@ -85,7 +85,7 @@ export function BriefPage({ items, isMobile }) {
           {/* What this is — stays in view beside the summary on wide screens */}
           <div className="brief-intro">
             <header className="hero rise">
-              <div className="meta">
+              <div className="label">
                 {new Date().toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" })}
                 {ready && digest?.generatedAt && ` · Updated ${updatedAgo(digest.generatedAt)}`}
               </div>
@@ -106,12 +106,12 @@ export function BriefPage({ items, isMobile }) {
             ))}
 
             {error && (
-              <div className="empty meta">
-                Couldn’t load the brief<button className="retry meta" onClick={loadDigest}>Retry</button>
+              <div className="empty label">
+                Couldn’t load the brief<button className="retry label" onClick={loadDigest}>Retry</button>
               </div>
             )}
 
-            {ready && !summaries.length && <div className="empty meta">No brief yet — check back soon</div>}
+            {ready && !summaries.length && <div className="empty label">No brief yet — check back soon</div>}
 
             {ready && summaries.length > 0 && (
               <ul className="summary" aria-label="What changed today">

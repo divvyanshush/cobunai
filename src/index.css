@@ -34,8 +34,9 @@ button:focus{outline:none}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--line-2)}
 
-/* Small uppercase mono label, the poster-corner metadata of the moodboard */
-.meta{font-family:var(--mono);font-size:11px;line-height:1.4;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+/* Names (topics, categories, the date) read as plain words; mono is only for numbers and times */
+.label{font-size:14px;line-height:1.45;color:var(--muted)}
+.meta{font-family:var(--mono);font-size:11.5px;line-height:1.4;letter-spacing:.01em;color:var(--muted)}
 
 /* ── Motion ─────────────────────────────────────────────── */
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -67,7 +68,7 @@ button:focus{outline:none}
   .brief{max-width:var(--page-max);margin:0 auto;padding:0 var(--gutter) 64px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
   .brief-intro{position:sticky;top:0;padding-bottom:40px}
   /* first takeaway's label sits level with the date */
-  .brief-main{padding-top:16px}
+  .brief-main{padding-top:31px}
   .brief .signal{margin-bottom:0}
 }
 
@@ -85,9 +86,11 @@ button:focus{outline:none}
 .signal .halo{fill:none;stroke:var(--accent);stroke-opacity:.5;opacity:0;animation:fade .5s ease 1.5s forwards, breathe 3.2s ease-in-out 2s infinite}
 
 /* Summary: one line per topic, a label column beside the text on wide screens */
-.summary{list-style:none;margin:0;padding:0}
-.sum-row{display:grid;grid-template-columns:104px 1fr;gap:6px 24px;padding:20px 0;border-bottom:1px solid var(--line)}
-.sum-label{padding-top:6px}
+/* No rules between takeaways: space separates them, and each topic sits on its takeaway's first line */
+.summary{list-style:none;margin:0;padding:0;display:grid;gap:32px}
+.sum-row{display:grid;grid-template-columns:104px 1fr;gap:4px 24px;align-items:baseline}
+.sum-label{transition:color .2s}
+.sum-row:hover .sum-label{color:var(--text)}
 .sum-text{display:block;margin:0;font-size:18px;line-height:1.55;overflow-wrap:anywhere}
 .sum-head{color:var(--text);font-weight:500}
 .sum-rest{color:var(--sub)}
@@ -119,7 +122,7 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 
 .map-center{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;animation:fade .6s ease both}
 .map-center .core{width:9px;height:9px;border-radius:50%;background:var(--text);box-shadow:0 0 0 6px var(--bg),0 0 0 7px var(--line-2)}
-.map-cat{position:absolute;transform:translate(-50%,-50%);max-width:130px;padding:3px 6px;background:var(--bg);text-align:center;animation:fade .6s ease both;animation-delay:.35s;transition:color .25s}
+.map-cat{position:absolute;transform:translate(-50%,-50%);max-width:130px;padding:3px 6px;background:var(--bg);text-align:center;font-size:13px;line-height:1.35;animation:fade .6s ease both;animation-delay:.35s;transition:color .25s}
 .map-cat.hot{color:var(--text)}
 
 .node{position:absolute;display:flex;align-items:center;gap:8px;height:26px;padding:0 6px;font-size:13px;white-space:nowrap;color:var(--sub);animation:fade .5s ease both;animation-delay:calc(.45s + var(--i,0) * 18ms);transition:color .2s}
@@ -170,8 +173,8 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
   .hero{margin:24px 0 22px}
   .hero-sub{font-size:16.5px}
   .signal{height:92px;margin-bottom:56px}
-  .sum-row{grid-template-columns:1fr;padding:18px 0}
-  .sum-label{padding-top:0}
+  .summary{gap:28px}
+  .sum-row{grid-template-columns:1fr;gap:6px}
   .sum-text{font-size:16.5px}
 }
 

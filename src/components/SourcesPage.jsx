@@ -100,12 +100,12 @@ function RadialMap({ tree, w, h, loading, selected, onSelect }) {
       </svg>
 
       <div className="map-center" style={{ left:cx, top:cy }}><span className="core"/></div>
-      <div className="meta" style={{ position:"absolute", left:cx, top:cy + 18, transform:"translateX(-50%)", whiteSpace:"nowrap" }}>
+      <div className="label" style={{ position:"absolute", left:cx, top:cy + 16, transform:"translateX(-50%)", whiteSpace:"nowrap" }}>
         {loading ? "Loading" : "Cobun"}
       </div>
 
       {cats.map(c => (
-        <div key={c.id} className={`map-cat meta${hotCat(c.id) ? " hot" : ""}`} style={{ left:c.x, top:c.y }}
+        <div key={c.id} className={`map-cat label${hotCat(c.id) ? " hot" : ""}`} style={{ left:c.x, top:c.y }}
           onMouseEnter={() => setHover(c.id)} onMouseLeave={() => setHover(null)}>
           {c.label}
         </div>
@@ -138,13 +138,13 @@ function SourcePanel({ source, cat, overlay, onClose }) {
     <aside className={`panel${overlay ? " overlay" : ""}`} aria-label={`${source.label} items`}>
       <div className="panel-head">
         <div className="panel-top">
-          <button className="panel-close meta" onClick={onClose}>
+          <button className="panel-close label" onClick={onClose}>
             <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 2L4 6l4 4"/></svg>
             Close
           </button>
-          <span className="meta">{source.items.length} {source.items.length === 1 ? "item" : "items"}</span>
+          <span className="label">{source.items.length} {source.items.length === 1 ? "item" : "items"}</span>
         </div>
-        <div className="meta">{cat.label}</div>
+        <div className="label">{cat.label}</div>
         <div className="panel-title">{source.label}</div>
       </div>
       <div style={{ padding:"6px 0 32px" }}>
@@ -171,13 +171,13 @@ function TreeMap({ tree, loading, open, onToggle }) {
       <div style={{ display:"flex", alignItems:"center", gap:12, height:40 }}>
         <span style={{ width:9, height:9, borderRadius:"50%", background:"var(--text)", flexShrink:0 }}/>
         <span style={{ fontSize:15, fontWeight:600 }}>Cobun</span>
-        {loading && <span className="meta">Loading</span>}
+        {loading && <span className="label">Loading</span>}
       </div>
 
       <div style={{ marginLeft:4 }}>
         {tree.map((cat, ci) => (
           <Branch key={cat.id} last={ci === tree.length - 1} mid={22}>
-            <div className="meta rise" style={{ "--i":ci, display:"flex", alignItems:"center", height:44, color:"var(--sub)" }}>{cat.label}</div>
+            <div className="label rise" style={{ "--i":ci, display:"flex", alignItems:"center", height:44, color:"var(--sub)" }}>{cat.label}</div>
             <div style={{ marginLeft:2 }}>
               {cat.sources.map((s, si) => {
                 const count = s.items.length;
@@ -195,7 +195,7 @@ function TreeMap({ tree, loading, open, onToggle }) {
                       <div className="tree-items">
                         <ItemList items={s.items}/>
                         {count > 5 && (
-                          <button className="more meta" onClick={() => onToggle(s.src)}>
+                          <button className="more label" onClick={() => onToggle(s.src)}>
                             <span className="more-sign" aria-hidden="true">−</span>Collapse
                           </button>
                         )}
@@ -252,7 +252,7 @@ export function SourcesPage({ items, loading, error, onRetry }) {
     <div className="page">
       {error && (
         <div className="src-head">
-          <span className="meta">Couldn’t load sources<button className="retry meta" onClick={onRetry}>Retry</button></span>
+          <span className="label">Couldn’t load sources<button className="retry label" onClick={onRetry}>Retry</button></span>
         </div>
       )}
 
