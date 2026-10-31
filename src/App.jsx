@@ -9,12 +9,26 @@ const TABS = ["brief","sources"];
 
 function getSession(k,d){ try{ const v=sessionStorage.getItem(k); return v===null?d:v; }catch{ return d; } }
 
+// The URL carries the tab and any open source (?tab=sources&source=arxiv), so a source page has a link and Back leaves it
+function readUrl(){
+  const q=new URLSearchParams(window.location.search), t=q.get("tab");
+  return { tab:TABS.includes(t)?t:null, source:t==="sources"?q.get("source"):null };
+}
+function urlFor(page,source){
+  const q=new URLSearchParams(window.location.search);
+  if(page==="brief") q.delete("tab"); else q.set("tab",page);
+  if(source) q.set("source",source); else q.delete("source");
+  const s=q.toString();
+  return window.location.pathname+(s?`?${s}`:"");
+}
+
 export default function App() {
   const [page,      setPageRaw]  = useState(()=>{
     // Old sessions and links can still say "feed" or "saved"
-    const p = new URLSearchParams(window.location.search).get("tab") || getSession("cobun-page","brief");
+    const p = readUrl().tab || getSession("cobun-page","brief");
     return TABS.includes(p) ? p : "brief";
   });
+  const [source,    setSource]   = useState(()=>readUrl().source);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const [items,     setItems]    = useState([]);
@@ -37,11 +51,34 @@ export default function App() {
   },[]);
   const isMobile = winW < 640;
 
-  const setPage = useCallback((p)=>{
-    setPageRaw(p);
-    setScrolled(false);
-    try{ sessionStorage.setItem("cobun-page",p); }catch{ /* storage blocked: the tab just isn't remembered */ }
+  // The URL and the remembered tab follow what's on screen; only opening a source adds a history entry
+  useEffect(()=>{
+    try{ sessionStorage.setItem("cobun-page",page); }catch{ /* storage blocked: the tab just isn't remembered */ }
+    const url=urlFor(page,source);
+    if(url!==window.location.pathname+window.location.search) window.history.replaceState(source?window.history.state:null,"",url);
+  },[page,source]);
+
+  useEffect(()=>{
+    const h=()=>{ const u=readUrl(); setPageRaw(u.tab||"brief"); setSource(u.source); setScrolled(false); };
+    window.addEventListener("popstate",h);
+    return()=>window.removeEventListener("popstate",h);
   },[]);
+
+  const openSource = useCallback((s)=>{
+    window.history.pushState({fromMap:true},"",urlFor("sources",s));
+    setSource(s);
+  },[]);
+  // Back to the map: undo the entry opening the source pushed, or replace a source page that was opened from a link
+  const closeSource = useCallback(()=>{
+    if(window.history.state?.fromMap) window.history.back(); else setSource(null);
+  },[]);
+
+  const setPage = useCallback((p)=>{
+    if(p==="sources" && source) return closeSource();  // the Sources tab returns to the map
+    setPageRaw(p);
+    setSource(null);
+    setScrolled(false);
+  },[source,closeSource]);
 
   const loadFeed = useCallback(async()=>{
     try{
@@ -57,7 +94,8 @@ export default function App() {
 
   const pages = {
     brief:   <BriefPage items={items} isMobile={isMobile}/>,
-    sources: <SourcesPage items={items} loading={loading} error={feedError} onRetry={loadFeed}/>,
+    sources: <SourcesPage items={items} loading={loading} error={feedError} onRetry={loadFeed}
+               source={source} onOpen={openSource} onClose={closeSource}/>,
   };
   const idx = Math.max(0, TABS.indexOf(page));
 
