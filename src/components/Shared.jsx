@@ -1,27 +1,6 @@
 import { useState, useRef } from "react";
 import { FS } from "../constants/theme.js";
 
-export function SkeletonRow({C, isDark}) {
-  const bg = isDark ? "#1e1e1e" : "#efefef";
-  const hi = isDark ? "#2a2a2a" : "#e0e0e0";
-  return(
-    <div style={{
-      padding:"14px 16px",borderBottom:"none",
-      display:"flex",flexDirection:"column",gap:8,
-      "--sk-base":bg,"--sk-highlight":hi,
-    }}>
-      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        <div className="sk" style={{width:56,height:9,borderRadius:3}}/>
-        <div className="sk" style={{width:48,height:9,borderRadius:3}}/>
-        <div className="sk" style={{width:32,height:9,borderRadius:3}}/>
-      </div>
-      <div className="sk" style={{width:"78%",height:16,borderRadius:3}}/>
-      <div className="sk" style={{width:"92%",height:12,borderRadius:3}}/>
-      <div className="sk" style={{width:"60%",height:12,borderRadius:3}}/>
-    </div>
-  );
-}
-
 export function BmSvg({filled, size=13}) {
   return(
     <svg width={size} height={size*15/13} viewBox="0 0 13 15"
@@ -38,16 +17,6 @@ export function DL({children, C}) {
     <div style={{fontSize:FS.xs,letterSpacing:"0.12em",color:C.muted,textTransform:"uppercase",
       margin:"20px 0 10px",paddingTop:16,borderTop:"none",
       display:"flex",alignItems:"center",gap:6}}>
-      {children}
-    </div>
-  );
-}
-
-export function SB({label, children, C}) {
-  return(
-    <div style={{padding:"14px",borderBottom:"none"}}>
-      <div style={{fontSize:FS.xs,letterSpacing:"0.14em",color:C.muted,
-        textTransform:"uppercase",marginBottom:12,fontWeight:500}}>{label}</div>
       {children}
     </div>
   );
@@ -99,29 +68,39 @@ export function BriefIcon({size=13, color="currentColor"}) {
   );
 }
 
-export function FeedIcon({size=13, color="currentColor"}) {
+export function SourcesIcon({size=13, color="currentColor"}) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",flexShrink:0}}>
-      <line x1="8" y1="6" x2="21" y2="6"/>
-      <line x1="8" y1="12" x2="21" y2="12"/>
-      <line x1="8" y1="18" x2="21" y2="18"/>
-      <line x1="3" y1="6" x2="3.01" y2="6"/>
-      <line x1="3" y1="12" x2="3.01" y2="12"/>
-      <line x1="3" y1="18" x2="3.01" y2="18"/>
+      <circle cx="12" cy="12" r="3"/>
+      <circle cx="4" cy="5" r="2"/>
+      <circle cx="20" cy="5" r="2"/>
+      <circle cx="4" cy="19" r="2"/>
+      <circle cx="20" cy="19" r="2"/>
+      <line x1="9.6" y1="10.2" x2="5.6" y2="6.3"/>
+      <line x1="14.4" y1="10.2" x2="18.4" y2="6.3"/>
+      <line x1="9.6" y1="13.8" x2="5.6" y2="17.7"/>
+      <line x1="14.4" y1="13.8" x2="18.4" y2="17.7"/>
     </svg>
   );
 }
 
 export function usePullToRefresh(onRefresh, enabled=true) {
   const startY = useRef(0);
+  const atTop = useRef(false);
   const [pulling, setPulling] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const onTouchStart = e => { if(!enabled) return; startY.current = e.touches[0].clientY; };
-  const onTouchMove  = e => {
+  // Only a drag that starts with the list scrolled to the top counts as a pull;
+  // the page itself never scrolls (html/body are overflow:hidden), the list inside it does.
+  const onTouchStart = e => {
     if(!enabled) return;
+    startY.current = e.touches[0].clientY;
+    atTop.current = e.currentTarget.scrollTop <= 0;
+  };
+  const onTouchMove  = e => {
+    if(!enabled || !atTop.current) return;
     const dy = e.touches[0].clientY - startY.current;
-    if(dy > 0 && window.scrollY === 0) {
+    if(dy > 0) {
       setPulling(true);
       setProgress(Math.min(dy / 80, 1));
     }

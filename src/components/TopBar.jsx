@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { FF, FS } from "../constants/theme.js";
-import { MoonIcon, SunIcon, SignOutIcon, BriefIcon, FeedIcon, BmSvg } from "./Shared.jsx";
+import { MoonIcon, SunIcon, SignOutIcon, BriefIcon, SourcesIcon, BmSvg } from "./Shared.jsx";
 
 const TABS = [
   { id:"brief", label:"Brief"  },
-  { id:"feed",  label:"Feed"   },
+  { id:"sources", label:"Sources" },
   { id:"saved", label:"Saved"  },
 ];
 
@@ -17,7 +17,7 @@ function UserIcon({size=16, color="currentColor"}) {
   );
 }
 
-export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, toggleDark, onSignOut, isMobile, emailDigest, toggleEmailDigest }) {
+export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, toggleDark, onSignOut, isMobile }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -67,7 +67,7 @@ export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, t
             >
               <span style={{display:"flex",alignItems:"center",gap:5}}>
                 {t.id==="brief" && <BriefIcon size={12} color="currentColor"/>}
-                {t.id==="feed"  && <FeedIcon  size={12} color="currentColor"/>}
+                {t.id==="sources" && <SourcesIcon size={12} color="currentColor"/>}
                 {t.id==="saved" && <BmSvg size={11} filled={bmCount>0} color="currentColor"/>}
                 {t.id==="saved" && bmCount>0 ? `Saved (${bmCount})` : t.label}
               </span>
@@ -137,34 +137,6 @@ export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, t
                   >
                     {isDark ? <SunIcon size={14} color={C.muted}/> : <MoonIcon size={14} color={C.muted}/>}
                     <span>{isDark ? "Light mode" : "Dark mode"}</span>
-                  </button>
-
-                  {/* Email digest toggle */}
-                  <button onClick={()=>{ toggleEmailDigest(); }}
-                    style={{
-                      width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
-                      padding:"11px 14px",background:"none",border:"none",
-                      borderBottom:`1px solid ${C.border}`,
-                      color:C.text,fontSize:FS.sm,fontFamily:FF.sans,
-                      cursor:"pointer",transition:"background .1s",textAlign:"left",
-                    }}
-                    onMouseEnter={e=>e.currentTarget.style.background=C.hover}
-                    onMouseLeave={e=>e.currentTarget.style.background="none"}
-                  >
-                    <span>Daily email digest</span>
-                    <div style={{
-                      width:32,height:18,borderRadius:9,
-                      background:emailDigest?C.text:C.border,
-                      position:"relative",transition:"background .2s",flexShrink:0,
-                    }}>
-                      <div style={{
-                        position:"absolute",top:3,
-                        left:emailDigest?16:3,
-                        width:12,height:12,borderRadius:"50%",
-                        background:emailDigest?C.bg:C.muted,
-                        transition:"left .2s",
-                      }}/>
-                    </div>
                   </button>
 
                   {/* Sign out */}
