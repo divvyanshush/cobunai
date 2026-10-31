@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { API, FF, DARK, LIGHT } from "./constants/theme.js";
+import { DATA_URL, FF, DARK, LIGHT } from "./constants/theme.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { Auth } from "./components/Auth.jsx";
 import { Detail } from "./components/Detail.jsx";
@@ -32,6 +32,7 @@ export default function App() {
   const [items,     setItems]    = useState([]);
   const [loading,   setLoading]  = useState(true);
   const [feedError, setFeedError]= useState(null);
+  const [feedAt,    setFeedAt]   = useState(null);
   const [detail,    setDetail]   = useState(null);
   const [showAuth,  setShowAuth] = useState(false);
   const [winW,      setWinW]     = useState(()=>typeof window!=="undefined"?window.innerWidth:1200);
@@ -62,10 +63,11 @@ export default function App() {
   const loadFeed = useCallback(async()=>{
     try{
       setLoading(true); setFeedError(null);
-      const res=await fetch(`${API}/feed`);
+      const res=await fetch(`${DATA_URL}/feed.json`);
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data=await res.json();
       setItems(data.items||[]);
+      setFeedAt(data.generatedAt||null);
     }catch(e){
       setFeedError(e.message);
     }finally{ setLoading(false); }
@@ -125,10 +127,7 @@ export default function App() {
     C, isDark, items, loading, bookmarks, readIds, user, detail,
     onItemClick:handleItemClick, onBookmark:handleBookmark, isMobile,
   };
-  const sources = <SourcesPage C={C} isDark={isDark} items={items} loading={loading} error={feedError} onRetry={loadFeed}/>;
-
-  // /digest items carry no "why"; the matching /feed item does once the backend generates it
-  const detailWhy = detail && (detail.why || items.find(i=>i.id===detail.id)?.why);
+  const sources = <SourcesPage C={C} isDark={isDark} items={items} loading={loading} error={feedError} updatedAt={feedAt} onRetry={loadFeed}/>;
 
   return (
     <div style={{
@@ -217,7 +216,7 @@ export default function App() {
             height:"100%",
           }}>
             <Detail
-              item={detail} why={detailWhy} C={C} isDark={isDark}
+              item={detail} C={C} isDark={isDark}
               isBookmarked={!!bookmarks[detail.id]}
               onBookmark={handleBookmark}
               onClose={()=>setDetail(null)}

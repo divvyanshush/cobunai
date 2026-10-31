@@ -1,7 +1,7 @@
 import { FS, SRC_COLORS, getTM, timeAgo, hasText } from "../constants/theme.js";
 import { BmSvg, DL } from "./Shared.jsx";
 
-export function Detail({item, why, onClose, C, isDark, isBookmarked, onBookmark}) {
+export function Detail({item, onClose, C, isDark, isBookmarked, onBookmark}) {
   const TML=getTM(isDark);
   const m=TML[item.type]||TML.product;
   const srcColor=SRC_COLORS[item.src]||"#666";
@@ -49,10 +49,10 @@ export function Detail({item, why, onClose, C, isDark, isBookmarked, onBookmark}
       </div>
 
       <div style={{padding:"0 16px 32px"}}>
-        {hasText(why)&&(
+        {hasText(item.why)&&(
           <><DL C={C}>WHY IT MATTERS</DL>
           <p style={{fontSize:FS.sm,lineHeight:1.85,
-            color:C.text,wordBreak:"break-word",margin:0}}>{why}</p></>
+            color:C.text,wordBreak:"break-word",margin:0}}>{item.why}</p></>
         )}
 
         {hasText(item.sum)&&(

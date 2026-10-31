@@ -21,8 +21,6 @@ export const SOURCE_MAP = [
     { src:"Karpathy",       label:"Andrej Karpathy" },
     { src:"SimonW",         label:"Simon Willison" },
     { src:"Interconnects",  label:"Interconnects" },
-    { src:"ImportAI",       label:"Import AI" },
-    { src:"TheSequence",    label:"The Sequence" },
     { src:"LastWeekInAI",   label:"Last Week in AI" },
   ]},
   { id:"community", label:"Community", tone:"discuss", sources:[

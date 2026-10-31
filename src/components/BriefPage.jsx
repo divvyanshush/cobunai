@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { API, FF, FS, getTM, hasText } from "../constants/theme.js";
+import { DATA_URL, FF, FS, getTM, hasText, updatedAgo } from "../constants/theme.js";
 import { Row } from "./Row.jsx";
 import { usePullToRefresh, PullIndicator } from "./Shared.jsx";
 
@@ -97,13 +97,12 @@ export function BriefPage({ C, isDark, onItemClick, onBookmark, bookmarks, readI
   const [digest,  setDigest]  = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
-  const [fetchedAt, setFetchedAt] = useState(null);
 
   const loadDigest = () => {
     setLoading(true); setError(null);
-    fetch(`${API}/digest`)
-      .then(r => r.json())
-      .then(d => { setDigest(d); setFetchedAt(d.generatedAt ? new Date(d.generatedAt).getTime() : Date.now()); setLoading(false); })
+    fetch(`${DATA_URL}/digest.json`)
+      .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => { setDigest(d); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
   };
 
@@ -111,12 +110,7 @@ export function BriefPage({ C, isDark, onItemClick, onBookmark, bookmarks, readI
 
   const ptr = usePullToRefresh(loadDigest, isMobile);
 
-  const freshness = fetchedAt ? (() => {
-    const m = Math.floor((Date.now() - fetchedAt) / 60000);
-    if(m < 1) return "just now";
-    if(m < 60) return `${m}m ago`;
-    return `${Math.floor(m/60)}h ago`;
-  })() : null;
+  const freshness = digest?.generatedAt ? updatedAgo(digest.generatedAt) : null;
 
   return (
     <div style={{ flex:1, display:"flex", flexDirection:"column", background:C.bg, overflow:"hidden", minWidth:0 }}>

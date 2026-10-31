@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
-import { FF, FS, getTM, timeAgo, hasText } from "../constants/theme.js";
+import { FF, FS, getTM, timeAgo, hasText, updatedAgo } from "../constants/theme.js";
 import { SOURCE_MAP } from "../constants/sources.js";
 
 const TREE_BELOW = 760;   // narrower than this, the map is a vertical branch tree
@@ -298,7 +298,7 @@ function TreeMap({ tree, C, isDark, loading, total, open, onToggle }) {
   );
 }
 
-export function SourcesPage({ C, isDark, items, loading, error, onRetry }) {
+export function SourcesPage({ C, isDark, items, loading, error, updatedAt, onRetry }) {
   const bodyRef = useRef(null);
   const { w: pageW, h: pageH } = useSize(bodyRef);
   const [selected, setSelected] = useState(null);  // radial: the source shown in the side panel
@@ -345,7 +345,7 @@ export function SourcesPage({ C, isDark, items, loading, error, onRetry }) {
           <span style={{ fontSize:FS.xs, color:C.muted, fontFamily:FF.sans, letterSpacing:"0.1em" }}>// sources</span>
           {!loading && !error && (
             <span style={{ fontSize:FS.xs, color:C.muted, fontFamily:FF.sans, letterSpacing:"0.06em" }}>
-              {live}/{all.length} active
+              {live}/{all.length} active{updatedAt && ` · updated ${updatedAgo(updatedAt)}`}
             </span>
           )}
         </div>
