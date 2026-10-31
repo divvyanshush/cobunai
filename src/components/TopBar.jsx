@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { FF, FS } from "../constants/theme.js";
-import { MoonIcon, SunIcon, SignOutIcon, BriefIcon, FeedIcon, BmSvg } from "./Shared.jsx";
+import { MoonIcon, SunIcon, SignOutIcon, BriefIcon, SourcesIcon, BmSvg } from "./Shared.jsx";
 
 const TABS = [
   { id:"brief", label:"Brief"  },
-  { id:"feed",  label:"Feed"   },
+  { id:"sources", label:"Sources" },
   { id:"saved", label:"Saved"  },
 ];
 
@@ -67,7 +67,7 @@ export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, t
             >
               <span style={{display:"flex",alignItems:"center",gap:5}}>
                 {t.id==="brief" && <BriefIcon size={12} color="currentColor"/>}
-                {t.id==="feed"  && <FeedIcon  size={12} color="currentColor"/>}
+                {t.id==="sources" && <SourcesIcon size={12} color="currentColor"/>}
                 {t.id==="saved" && <BmSvg size={11} filled={bmCount>0} color="currentColor"/>}
                 {t.id==="saved" && bmCount>0 ? `Saved (${bmCount})` : t.label}
               </span>

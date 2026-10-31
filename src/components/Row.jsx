@@ -1,4 +1,4 @@
-import { getTM, SRC_COLORS, FS, FF } from "../constants/theme.js";
+import { getTM, SRC_COLORS, FS, FF, timeAgo, hasText } from "../constants/theme.js";
 import { BmSvg } from "./Shared.jsx";
 
 export function Row({item, i, onClick, C, isDark, isBookmarked, onBookmark, selected, isRead}) {
@@ -40,15 +40,13 @@ export function Row({item, i, onClick, C, isDark, isBookmarked, onBookmark, sele
         <span style={{
           color:srcColor, fontWeight:500, flexShrink:0,
         }}>{item.srcLabel||item.src}</span>
-        <span style={{color:C.faint}}>·</span>
-        <span style={{color:C.muted,flexShrink:0}}>{item.timeLabel}</span>
+        {item.time>0&&<>
+          <span style={{color:C.faint}}>·</span>
+          <span style={{color:C.muted,flexShrink:0}}>{timeAgo(item.time)}</span>
+        </>}
         {item.score>0&&<>
           <span style={{color:C.faint}}>·</span>
           <span style={{color:C.muted}}>↑{item.score}</span>
-        </>}
-        {item.relatedCount>0&&<>
-          <span style={{color:C.faint}}>·</span>
-          <span style={{color:C.muted,flexShrink:0}}>{item.relatedCount+1} sources</span>
         </>}
         <button onClick={e=>onBookmark(item,e)}
           style={{
@@ -76,7 +74,7 @@ export function Row({item, i, onClick, C, isDark, isBookmarked, onBookmark, sele
       }}>{item.title}</div>
 
       {/* Summary */}
-      {item.sum && (
+      {hasText(item.sum) && (
         <div style={{
           fontSize:FS.sm,
           color:C.sub,
@@ -94,20 +92,6 @@ export function Row({item, i, onClick, C, isDark, isBookmarked, onBookmark, sele
           fontSize:FS.xs,color:C.muted,fontFamily:FF.sans,
           overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
         }}>by {item.authors}</div>
-      )}
-
-      {item.relatedCount > 0 && (
-        <div style={{
-          fontSize:FS.xs, color:C.faint,
-          fontFamily:FF.sans, letterSpacing:"0.04em",
-          display:"flex", alignItems:"center", gap:6,
-        }}>
-          <span style={{color:C.muted}}>+{item.relatedCount} more covering this</span>
-          <span style={{color:C.faint}}>·</span>
-          {(item.related||[]).slice(0,2).map(r=>(
-            <span key={r.id} style={{color:C.faint}}>{r.src}</span>
-          )).reduce((a,b)=>[a, <span key="sep" style={{color:C.faint}}> · </span>, b])}
-        </div>
       )}
     </div>
   );

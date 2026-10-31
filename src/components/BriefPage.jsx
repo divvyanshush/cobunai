@@ -1,22 +1,40 @@
 import { useState, useEffect } from "react";
-import { API, FF, FS, getTM } from "../constants/theme.js";
+import { API, FF, FS, getTM, hasText } from "../constants/theme.js";
 import { Row } from "./Row.jsx";
 import { usePullToRefresh, PullIndicator } from "./Shared.jsx";
+
+const TOP_N = 3;
 
 function DigestSection({ cat, C, isDark, onItemClick, onBookmark, bookmarks, readIds, detail }) {
   const [open, setOpen] = useState(false);
   const TML = getTM(isDark);
   const m = TML[cat.id] || TML.product;
+  const items = cat.items || [];
+  const shown = open ? items : items.slice(0, TOP_N);
+  const rest = items.length - TOP_N;
+
+  const toggleStyle = {
+    background: "none",
+    border: `1px solid ${C.border}`,
+    padding: "3px 10px",
+    cursor: "pointer",
+    color: C.muted,
+    fontSize: FS.xs,
+    fontFamily: FF.sans,
+    letterSpacing: "0.06em",
+    borderRadius: 2,
+    transition: "all .1s",
+  };
 
   return (
     <div style={{ borderBottom: "none" }}>
 
       {/* Header — always visible */}
-      <div style={{ padding: "18px 16px 16px" }}>
+      <div style={{ padding: "18px 16px 14px" }}>
 
         {/* Label row */}
         <div style={{
-          display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+          display: "flex", alignItems: "center", gap: 8,
         }}>
           <span style={{
             fontSize: FS.sm, fontWeight: 700,
@@ -26,7 +44,7 @@ function DigestSection({ cat, C, isDark, onItemClick, onBookmark, bookmarks, rea
         </div>
 
         {/* AI summary */}
-        {cat.summary && (
+        {hasText(cat.summary) && (
           <div style={{
             fontSize: FS.base,
             fontWeight: 400,
@@ -35,41 +53,18 @@ function DigestSection({ cat, C, isDark, onItemClick, onBookmark, bookmarks, rea
             fontFamily: FF.sans,
             borderLeft: `2px solid ${m.t}`,
             paddingLeft: 12,
-            marginBottom: 14,
+            marginTop: 10,
           }}>{cat.summary}</div>
         )}
-
-
-
-        {/* Toggle button */}
-        <button
-          onClick={() => setOpen(o => !o)}
-          style={{
-            background: "none",
-            border: `1px solid ${C.border}`,
-            padding: "3px 10px",
-            cursor: "pointer",
-            color: C.muted,
-            fontSize: FS.xs,
-            fontFamily: FF.sans,
-            letterSpacing: "0.06em",
-            borderRadius: 2,
-            transition: "all .1s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = C.sub; e.currentTarget.style.color = C.text; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
-        >
-          {open ? "↑ collapse" : `↓ ${cat.count} items`}
-        </button>
       </div>
 
-      {/* Expanded items — visually separated */}
-      {open && (
+      {/* Top items, the rest behind a toggle — visually separated */}
+      {shown.length > 0 && (
         <div style={{
           borderTop: `1px solid ${C.border}`,
           background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
         }}>
-          {cat.items.map((item, i) => (
+          {shown.map((item, i) => (
             <Row
               key={item.id} item={item} i={i}
               C={C} isDark={isDark}
@@ -80,21 +75,18 @@ function DigestSection({ cat, C, isDark, onItemClick, onBookmark, bookmarks, rea
               isRead={readIds.has(item.id)}
             />
           ))}
-          {/* Collapse button at bottom */}
-          <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}` }}>
-            <button
-              onClick={() => setOpen(false)}
-              style={{
-                background: "none", border: `1px solid ${C.border}`,
-                padding: "3px 10px", cursor: "pointer",
-                color: C.muted, fontSize: FS.xs,
-                fontFamily: FF.sans, letterSpacing: "0.06em",
-                borderRadius: 2, transition: "all .1s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = C.sub; e.currentTarget.style.color = C.text; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
-            >↑ collapse</button>
-          </div>
+          {rest > 0 && (
+            <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}` }}>
+              <button
+                onClick={() => setOpen(o => !o)}
+                style={toggleStyle}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.sub; e.currentTarget.style.color = C.text; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+              >
+                {open ? "↑ collapse" : `↓ ${rest} more`}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -108,7 +100,7 @@ export function BriefPage({ C, isDark, onItemClick, onBookmark, bookmarks, readI
   const [fetchedAt, setFetchedAt] = useState(null);
 
   const loadDigest = () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     fetch(`${API}/digest`)
       .then(r => r.json())
       .then(d => { setDigest(d); setFetchedAt(d.generatedAt ? new Date(d.generatedAt).getTime() : Date.now()); setLoading(false); })
@@ -177,6 +169,15 @@ export function BriefPage({ C, isDark, onItemClick, onBookmark, bookmarks, readI
           <div style={{padding:"48px 16px", textAlign:"center"}}>
             <div style={{fontSize:FS.sm, color:C.muted, fontFamily:FF.sans, marginBottom:8}}>no brief available</div>
             <div style={{fontSize:FS.xs, color:C.faint, fontFamily:FF.sans}}>check back soon — content is still loading</div>
+          </div>
+        )}
+
+        {!loading && !error && hasText(digest?.intro) && (
+          <div style={{ padding: "6px 16px 4px" }}>
+            <div style={{
+              fontSize: FS.base, color: C.text, lineHeight: 1.75, fontFamily: FF.sans,
+              borderLeft: `2px solid ${C.text}`, paddingLeft: 12,
+            }}>{digest.intro}</div>
           </div>
         )}
 

@@ -1,12 +1,15 @@
 export const API = "https://pulse-backend-8jc6.onrender.com";
 
 export const timeAgo = ts => {
-  const s = Math.floor(Date.now()/1000 - ts);
+  const s = Math.max(0, Math.floor(Date.now()/1000 - ts));
   if(s<60)    return `${s}s`;
   if(s<3600)  return `${Math.floor(s/60)}m`;
   if(s<86400) return `${Math.floor(s/3600)}h`;
   return `${Math.floor(s/86400)}d`;
 };
+
+// RSS summaries are sliced and suffixed with "…", so an empty one arrives as just "…"
+export const hasText = s => !!s && s.replace(/[\s.…]/g,"").length > 0;
 
 export const FS = {
   xs:  "0.72rem",
@@ -76,5 +79,3 @@ export const SRC_COLORS = {
   SimonW:"#1a8cff", Interconnects:"#e06030", AINnews:"#cc2244", Microsoft:"#0078d4",
   GoogleResearch:"#4285f4", MetaAI:"#0668E1", TDS:"#1a8c6b", MarkTechPost:"#7b2ff7",
 };
-
-export const FILTERS = ["all","discuss","tool","research","repo","model"];

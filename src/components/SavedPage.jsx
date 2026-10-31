@@ -1,4 +1,4 @@
-import { FS, FF, getTM } from "../constants/theme.js";
+import { FS, FF, getTM, timeAgo, hasText } from "../constants/theme.js";
 import { BmSvg } from "./Shared.jsx";
 
 export function SavedPage({ C, isDark, items, bookmarks, onItemClick, onBookmark, isMobile }) {
@@ -37,7 +37,7 @@ export function SavedPage({ C, isDark, items, bookmarks, onItemClick, onBookmark
                 <span style={{color:C.faint}}>·</span>
                 <span style={{color:C.muted}}>{item.srcLabel||item.src}</span>
                 <span style={{color:C.faint}}>·</span>
-                <span style={{color:C.muted}}>{item.timeLabel}</span>
+                <span style={{color:C.muted}}>{item.time>0?timeAgo(item.time):item.timeLabel}</span>
                 <button onClick={e=>onBookmark(item,e)}
                   style={{marginLeft:"auto",background:"none",border:"none",
                     padding:0,cursor:"pointer",lineHeight:0,color:C.accent}}>
@@ -47,7 +47,7 @@ export function SavedPage({ C, isDark, items, bookmarks, onItemClick, onBookmark
               <div style={{fontSize:FS.base,fontWeight:500,color:C.text,
                 lineHeight:1.4,letterSpacing:"-0.01em",fontFamily:FF.sans,
               }}>{item.title}</div>
-              {item.sum&&(
+              {hasText(item.sum)&&(
                 <div style={{fontSize:FS.sm,color:C.muted,lineHeight:1.75,
                   fontFamily:FF.sans,
                   display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden",
