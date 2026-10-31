@@ -1,5 +1,4 @@
-import { useState, useRef } from "react";
-import { FS } from "../constants/theme.js";
+import { useState, useRef, useLayoutEffect } from "react";
 
 export function BmSvg({filled, size=13}) {
   return(
@@ -9,16 +8,6 @@ export function BmSvg({filled, size=13}) {
       style={{display:"block",flexShrink:0,transition:"fill .1s,stroke .1s"}}>
       <path d="M1 1h11v13l-5.5-3.5L1 14V1z"/>
     </svg>
-  );
-}
-
-export function DL({children, C}) {
-  return(
-    <div style={{fontSize:FS.xs,letterSpacing:"0.12em",color:C.muted,textTransform:"uppercase",
-      margin:"20px 0 10px",paddingTop:16,borderTop:"none",
-      display:"flex",alignItems:"center",gap:6}}>
-      {children}
-    </div>
   );
 }
 
@@ -56,32 +45,20 @@ export function SignOutIcon({size=14, color="currentColor"}) {
   );
 }
 
-export function BriefIcon({size=13, color="currentColor"}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",flexShrink:0}}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/>
-      <line x1="16" y1="13" x2="8" y2="13"/>
-      <line x1="16" y1="17" x2="8" y2="17"/>
-      <polyline points="10 9 9 9 8 9"/>
-    </svg>
-  );
-}
-
-export function SourcesIcon({size=13, color="currentColor"}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:"block",flexShrink:0}}>
-      <circle cx="12" cy="12" r="3"/>
-      <circle cx="4" cy="5" r="2"/>
-      <circle cx="20" cy="5" r="2"/>
-      <circle cx="4" cy="19" r="2"/>
-      <circle cx="20" cy="19" r="2"/>
-      <line x1="9.6" y1="10.2" x2="5.6" y2="6.3"/>
-      <line x1="14.4" y1="10.2" x2="18.4" y2="6.3"/>
-      <line x1="9.6" y1="13.8" x2="5.6" y2="17.7"/>
-      <line x1="14.4" y1="13.8" x2="18.4" y2="17.7"/>
-    </svg>
-  );
+export function useSize(ref) {
+  const [size, setSize] = useState({ w:0, h:0 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const measure = () => {
+      const w = el.clientWidth, h = el.clientHeight;
+      setSize(s => s.w === w && s.h === h ? s : { w, h });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return size;
 }
 
 export function usePullToRefresh(onRefresh, enabled=true) {
@@ -115,17 +92,11 @@ export function usePullToRefresh(onRefresh, enabled=true) {
   return { pulling, progress, onTouchStart, onTouchMove, onTouchEnd };
 }
 
-export function PullIndicator({ progress, pulling, C }) {
+export function PullIndicator({ progress, pulling }) {
   if(!pulling && progress === 0) return null;
   return (
-    <div style={{
-      display:"flex", alignItems:"center", justifyContent:"center",
-      height:40, color:C.muted, fontSize:"0.72rem",
-      fontFamily:"'IBM Plex Mono', monospace",
-      opacity: progress,
-      transition:"opacity 0.1s",
-    }}>
-      {progress >= 1 ? "↓ release to refresh" : "↓ pull to refresh"}
+    <div className="meta" style={{ display:"flex", alignItems:"center", justifyContent:"center", height:40, opacity:progress }}>
+      {progress >= 1 ? "release to refresh" : "pull to refresh"}
     </div>
   );
 }

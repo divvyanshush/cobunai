@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FF, FS } from "../constants/theme.js";
-import { MoonIcon, SunIcon, SignOutIcon, BriefIcon, SourcesIcon, BmSvg } from "./Shared.jsx";
+import { MoonIcon, SunIcon, SignOutIcon } from "./Shared.jsx";
 
 const TABS = [
   { id:"brief", label:"Brief"  },
@@ -21,18 +21,10 @@ export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, t
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div style={{
-      height:48, minHeight:48,
-      display:"flex", alignItems:"center",
-      borderBottom:'none',
-      background:C.bg,
-      paddingLeft:16, paddingRight:16,
-      gap:0, flexShrink:0, userSelect:"none",
-      position:"relative",
-    }}>
+    <div className="topbar">
 
       {/* Logo */}
-      <a href={undefined} onClick={e=>{e.preventDefault(); setPage("brief");}} style={{marginRight:24, flexShrink:0, display:"flex", alignItems:"center", textDecoration:"none", cursor:"pointer"}}>
+      <a href={undefined} onClick={e=>{e.preventDefault(); setPage("brief");}} style={{flexShrink:0, display:"flex", alignItems:"center", cursor:"pointer"}}>
         {isMobile ? (
           <svg width="28" height="26" viewBox="0 0 29 26" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.3636 8.1815C18.627 9.44704 19.3366 11.1622 19.3366 12.9504C19.3366 14.7386 18.627 16.4537 17.3636 17.7193M20.5451 5C22.6521 7.10941 23.8356 9.96893 23.8356 12.9504C23.8356 15.9318 22.6521 18.7913 20.5451 20.9007M8.29047 20.983C6.18349 18.8736 5 16.014 5 13.0325C5 10.0511 6.18349 7.19158 8.29047 5.08217M11.472 17.8015C10.2086 16.5359 9.49904 14.8207 9.49904 13.0325C9.49904 11.2443 10.2086 9.5292 11.472 8.26366" stroke={C.text} strokeWidth="2.25" strokeLinecap="round"/>
@@ -43,37 +35,13 @@ export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, t
       </a>
 
       {/* Tabs */}
-      <div style={{display:"flex",alignItems:"stretch",height:"100%",flex:1,gap:0}}>
-        {TABS.filter(t => t.id !== "saved" || user).map(t=>{
-          const active = page===t.id;
-          return (
-            <button key={t.id} onClick={()=>setPage(t.id)}
-              style={{
-                height:"100%",
-                padding:"0 14px",
-                background:"none",
-                border:"none",
-                borderBottom:active?`2px solid ${C.text}`:"2px solid transparent",
-                color:active?C.text:C.muted,
-                fontSize:FS.sm,
-                fontFamily:FF.sans,
-                fontWeight:active?500:400,
-                cursor:"pointer",
-                transition:"color .1s, border-color .1s",
-                flexShrink:0,
-              }}
-              onMouseEnter={e=>{ if(!active) e.currentTarget.style.color=C.sub; }}
-              onMouseLeave={e=>{ if(!active) e.currentTarget.style.color=C.muted; }}
-            >
-              <span style={{display:"flex",alignItems:"center",gap:5}}>
-                {t.id==="brief" && <BriefIcon size={12} color="currentColor"/>}
-                {t.id==="sources" && <SourcesIcon size={12} color="currentColor"/>}
-                {t.id==="saved" && <BmSvg size={11} filled={bmCount>0} color="currentColor"/>}
-                {t.id==="saved" && bmCount>0 ? `Saved (${bmCount})` : t.label}
-              </span>
-            </button>
-          );
-        })}
+      <div className="tabs" role="tablist">
+        {TABS.filter(t => t.id !== "saved" || user).map(t=>(
+          <button key={t.id} className="tab" role="tab" aria-selected={page===t.id} onClick={()=>setPage(t.id)}>
+            {t.label}
+            {t.id==="saved" && bmCount>0 && <span className="tab-count">{bmCount}</span>}
+          </button>
+        ))}
       </div>
 
       {/* Right — account icon */}
@@ -158,18 +126,7 @@ export function TopBar({ C, isDark, page, setPage, user, setShowAuth, bmCount, t
             )}
           </div>
         ) : (
-          <button onClick={()=>window.location.href="/login"}
-            style={{
-              background:C.accent,border:"none",
-              padding:"5px 14px",cursor:"pointer",
-              color:isDark?"#0a0a0a":"#ffffff",
-              fontSize:FS.sm,fontFamily:FF.sans,
-              fontWeight:600,borderRadius:3,
-              transition:"opacity .1s",
-            }}
-            onMouseEnter={e=>e.currentTarget.style.opacity="0.85"}
-            onMouseLeave={e=>e.currentTarget.style.opacity="1"}
-          >Sign in</button>
+          <button className="signin" onClick={()=>window.location.href="/login"}>Sign in</button>
         )}
       </div>
     </div>
