@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { DATA_URL, hasText, updatedAgo, decode } from "../constants/theme.js";
-import { Story } from "./Story.jsx";
 import { Signal } from "./Signal.jsx";
 import { usePullToRefresh, PullIndicator } from "./Shared.jsx";
 
-const TOP_N = 3;
 const EVEN = Array(26).fill(0.35);
 const SHORT = { model:"Models", tool:"Tools", research:"Research", repo:"Repos", discuss:"Community", funding:"Business" };
 
@@ -46,35 +44,7 @@ function SummaryRow({ cat, pool, i }) {
   );
 }
 
-function Section({ cat, bookmarks, onBookmark }) {
-  const [open, setOpen] = useState(false);
-  const items = cat.items || [];
-  const rest = items.slice(TOP_N);
-  const story = item => (
-    <Story key={item.id} item={item} isBookmarked={!!bookmarks[item.id]} onBookmark={onBookmark}/>
-  );
-
-  return (
-    <section className="section">
-      <header className="section-head">
-        <h3 className="section-name">{cat.label}</h3>
-        <span className="meta">{items.length}</span>
-      </header>
-      {items.slice(0, TOP_N).map(story)}
-      {rest.length > 0 && <>
-        <div className="extra" data-open={open} inert={!open}>
-          <div>{rest.map(story)}</div>
-        </div>
-        <button className="more meta" onClick={() => setOpen(o => !o)} aria-expanded={open}>
-          <span className="more-sign" aria-hidden="true">+</span>
-          {open ? "Show less" : `${rest.length} more`}
-        </button>
-      </>}
-    </section>
-  );
-}
-
-export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
+export function BriefPage({ items, isMobile }) {
   const [digest,  setDigest]  = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -101,8 +71,7 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
     return vals.map(v => v / max);
   }, [items]);
 
-  const categories = digest?.categories || [];
-  const summaries = categories.filter(c => hasText(c.summary));
+  const summaries = (digest?.categories || []).filter(c => hasText(c.summary));
   const pool = useMemo(() => [...(digest?.categories || []).flatMap(c => c.items || []), ...items], [items, digest]);
   const ready = !loading && !error;
 
@@ -112,55 +81,44 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
         <PullIndicator progress={ptr.progress} pulling={ptr.pulling}/>
         <div className="brief">
 
-          {/* What this is */}
-          <header className="hero rise">
-            <div className="meta">
-              {new Date().toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" })}
-              {ready && digest?.generatedAt && ` · Updated ${updatedAgo(digest.generatedAt)}`}
-            </div>
-            <h1 className="hero-title">Today in AI</h1>
-            <p className="hero-sub">What changed today for people building with AI.</p>
-          </header>
+          {/* What this is — stays in view beside the summary on wide screens */}
+          <div className="brief-intro">
+            <header className="hero rise">
+              <div className="meta">
+                {new Date().toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" })}
+                {ready && digest?.generatedAt && ` · Updated ${updatedAgo(digest.generatedAt)}`}
+              </div>
+              <h1 className="hero-title">Today in AI</h1>
+              <p className="hero-sub">What changed today for people building with AI.</p>
+            </header>
+            <Signal weights={weights}/>
+          </div>
 
-          <Signal weights={weights}/>
-
-          {loading && [0, 1, 2].map(n => (
-            <div key={n} style={{ marginBottom:36 }}>
-              <div className="sk" style={{ width:80, height:10, marginBottom:14 }}/>
-              <div className="sk" style={{ width:"86%", height:18, marginBottom:10 }}/>
-              <div className="sk" style={{ width:"60%", height:18 }}/>
-            </div>
-          ))}
-
-          {error && (
-            <div className="empty meta">
-              Couldn’t load the brief<button className="retry meta" onClick={loadDigest}>Retry</button>
-            </div>
-          )}
-
-          {ready && !categories.length && <div className="empty meta">No brief yet — check back soon</div>}
-
-          {/* Just what matters: one line per topic */}
-          {ready && summaries.length > 0 && <>
-            <div className="block-head rise" style={{ "--i":2 }}>
-              <h2 className="block-title">Summary</h2>
-              <span className="meta">The short version</span>
-            </div>
-            <ul className="summary">
-              {summaries.map((cat, i) => <SummaryRow key={cat.id} cat={cat} pool={pool} i={i}/>)}
-            </ul>
-          </>}
-
-          {/* Everything else, for going deeper */}
-          {ready && categories.length > 0 && <>
-            <div className="block-head">
-              <h2 className="block-title">Headlines</h2>
-              <span className="meta">By topic</span>
-            </div>
-            {categories.map(cat => (
-              <Section key={cat.id} cat={cat} bookmarks={bookmarks} onBookmark={onBookmark}/>
+          {/* What matters: one takeaway per topic, each linking to its story */}
+          <div className="brief-main">
+            {loading && [0, 1, 2, 3].map(n => (
+              <div key={n} style={{ padding:"22px 0" }}>
+                <div className="sk" style={{ width:72, height:10, marginBottom:14 }}/>
+                <div className="sk" style={{ width:"88%", height:18, marginBottom:10 }}/>
+                <div className="sk" style={{ width:"62%", height:18 }}/>
+              </div>
             ))}
-          </>}
+
+            {error && (
+              <div className="empty meta">
+                Couldn’t load the brief<button className="retry meta" onClick={loadDigest}>Retry</button>
+              </div>
+            )}
+
+            {ready && !summaries.length && <div className="empty meta">No brief yet — check back soon</div>}
+
+            {ready && summaries.length > 0 && <>
+              <h2 className="block-title rise" style={{ "--i":2 }}>Summary</h2>
+              <ul className="summary">
+                {summaries.map((cat, i) => <SummaryRow key={cat.id} cat={cat} pool={pool} i={i}/>)}
+              </ul>
+            </>}
+          </div>
         </div>
       </div>
     </div>

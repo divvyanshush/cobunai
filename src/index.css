@@ -57,6 +57,14 @@ button:focus{outline:none}
 .page{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);animation:fade .4s ease both}
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden}
 .brief{max-width:720px;margin:0 auto;padding:12px 24px 120px}
+/* Wide screens: intro and graphic stay in view on the left, the summary reads on the right,
+   both on the same left edge as the logo */
+@media (min-width:1024px){
+  .brief{max-width:1320px;margin:0;padding:0 20px 120px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 88px;align-items:start}
+  .brief-intro{position:sticky;top:0;padding-bottom:40px}
+  .brief-main{padding-top:58px}
+  .brief .signal{margin-bottom:0}
+}
 
 .hero{margin:36px 0 28px}
 .hero-title{font-size:clamp(36px,5.2vw,52px);line-height:1.02;letter-spacing:-.04em;font-weight:500;margin:14px 0 14px;color:var(--text)}
@@ -72,8 +80,7 @@ button:focus{outline:none}
 .signal .halo{fill:none;stroke:var(--accent);stroke-opacity:.5;opacity:0;animation:fade .5s ease 1.5s forwards, breathe 3.2s ease-in-out 2s infinite}
 
 /* Summary: one line per topic, a label column beside the text on wide screens */
-.block-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line-2)}
-.block-title{font-size:22px;line-height:1.2;font-weight:500;letter-spacing:-.02em;margin:0;color:var(--text)}
+.block-title{font-size:22px;line-height:1.2;font-weight:500;letter-spacing:-.02em;margin:0;padding-bottom:14px;border-bottom:1px solid var(--line-2);color:var(--text)}
 .summary{list-style:none;margin:0 0 80px;padding:0}
 .sum-row{display:grid;grid-template-columns:104px 1fr;gap:6px 24px;padding:20px 0;border-bottom:1px solid var(--line)}
 .sum-label{padding-top:6px}
@@ -83,10 +90,6 @@ button:focus{outline:none}
 a.sum-text:hover .sum-head{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;text-decoration-color:var(--line-2)}
 a.sum-text:hover .story-arrow{opacity:1;transform:none}
 
-.section{border-top:1px solid var(--line);padding:22px 0 6px}
-.block-head+.section{border-top:none}
-.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:2px}
-.section-name{font-size:15px;font-weight:600;letter-spacing:-.005em;color:var(--text);margin:0}
 
 .story{position:relative;display:flex;gap:16px;padding:14px 0}
 .story-link{flex:1;min-width:0;display:block}
@@ -108,9 +111,6 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .more:hover{color:var(--text)}
 .more-sign{display:inline-block;transition:transform .35s var(--ease)}
 .more[aria-expanded="true"] .more-sign{transform:rotate(45deg)}
-.extra{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s var(--ease)}
-.extra[data-open="true"]{grid-template-rows:1fr}
-.extra>div{overflow:hidden;min-height:0}
 
 .sk{background:var(--hover);border-radius:2px;animation:breathe 1.6s ease-in-out infinite}
 .empty{padding:48px 0;color:var(--muted)}
@@ -173,7 +173,7 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .tree-items{margin:0 0 10px 2px;padding-left:16px;border-left:1px solid var(--line-2);animation:rise .45s var(--ease) both}
 
 /* ── Saved ──────────────────────────────────────────────── */
-.saved{max-width:720px;margin:0 auto;padding:16px 24px 96px}
+.saved{max-width:760px;padding:24px 20px 96px}
 
 @media (max-width:640px){
   .topbar{padding:0 14px;gap:10px}
