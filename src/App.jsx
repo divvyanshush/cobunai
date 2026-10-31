@@ -21,6 +21,14 @@ export default function App() {
   const [loading,   setLoading]  = useState(true);
   const [feedError, setFeedError]= useState(null);
   const [winW,      setWinW]     = useState(()=>typeof window!=="undefined"?window.innerWidth:1200);
+  const [scrolled,  setScrolled] = useState(false);
+
+  // Each page scrolls its own container; scroll events don't bubble, so listen in the capture phase
+  useEffect(()=>{
+    const h=e=>{ if(e.target instanceof Element) setScrolled(e.target.scrollTop > 4); };
+    document.addEventListener("scroll",h,true);
+    return()=>document.removeEventListener("scroll",h,true);
+  },[]);
 
   useEffect(()=>{
     const h=()=>setWinW(window.innerWidth);
@@ -31,6 +39,7 @@ export default function App() {
 
   const setPage = useCallback((p)=>{
     setPageRaw(p);
+    setScrolled(false);
     try{ sessionStorage.setItem("pulse-page",p); }catch{ /* storage blocked: the tab just isn't remembered */ }
   },[]);
 
@@ -60,7 +69,7 @@ export default function App() {
       height:"100dvh", width:"100vw", overflow:"hidden", paddingTop:"env(safe-area-inset-top)",
       background:"var(--bg)", color:"var(--text)",
     }}>
-      <TopBar page={page} setPage={setPage} isMobile={isMobile}/>
+      <TopBar page={page} setPage={setPage} isMobile={isMobile} scrolled={scrolled}/>
 
       {/* Pages — side by side and swipeable on phones, one at a time on wider screens */}
       <div style={{flex:1, overflow:"hidden", position:"relative", minWidth:0, display:"flex"}}

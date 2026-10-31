@@ -3,9 +3,9 @@ const TABS = [
   { id:"sources", label:"Sources" },
 ];
 
-export function TopBar({ page, setPage, isMobile }) {
+export function TopBar({ page, setPage, isMobile, scrolled }) {
   return (
-    <div className="topbar">
+    <div className="topbar" data-scrolled={scrolled}>
 
       {/* Logo */}
       <a href="/app" aria-label="Cobun AI" onClick={e=>{e.preventDefault(); setPage("brief");}}
