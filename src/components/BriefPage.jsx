@@ -1,13 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
-import { fetchData, hasText, updatedAgo, decode } from "../constants/theme.js";
+import { fetchData, hasText, updatedAgo, timeAgo, decode } from "../constants/theme.js";
+import { SOURCE_MAP } from "../constants/sources.js";
 import { Signal } from "./Signal.jsx";
 import { usePullToRefresh } from "../hooks/usePullToRefresh.js";
 import { PullIndicator } from "./Shared.jsx";
 
 const EVEN = Array(26).fill(0.35);
 const SHORT = { model:"Models", tool:"Tools", research:"Research", repo:"Repos", discuss:"Community", funding:"Business" };
+const SRC_LABEL = Object.fromEntries(SOURCE_MAP.flatMap(c => c.sources.map(s => [s.src, s.label])));
 
-// A category summary reads "Headline — detail" or "Headline. Detail." Split it so the headline reads first.
+// Digests before headlines had one summary per category, "Headline — detail" or "Headline. Detail."
+// Split it so the headline reads first.
 function splitSummary(s) {
   const text = decode(s).trim();
   const dash = text.indexOf(" — ");
@@ -27,13 +30,23 @@ function findItem(head, pool) {
   }) || null;
 }
 
+// One story per topic: a headline, a dek with its most concrete fact, and who reported it when
 function SummaryRow({ cat, pool, i }) {
-  const [head, rest] = splitSummary(cat.summary);
-  const item = findItem(head, pool);
-  const body = <>
+  const news = hasText(cat.headline);
+  const [head, rest] = news ? [decode(cat.headline), decode(cat.dek)] : splitSummary(cat.summary);
+  const item = news ? (cat.items || []).find(it => it.id === cat.lead) : findItem(head, pool);
+  const by = news && item && [item.srcLabel || SRC_LABEL[item.src] || item.src, item.time > 0 && `${timeAgo(item.time)} ago`].filter(Boolean).join(" · ");
+  const arrow = item && <span className="story-arrow" aria-hidden="true">↗</span>;
+  // The arrow rides on the headline's last word, so it can't wrap onto a line of its own above the dek
+  const cut = head.lastIndexOf(" ") + 1;
+  const body = news ? <>
+    <span className="sum-head">{head.slice(0, cut)}<span className="sum-end">{head.slice(cut)}{arrow}</span></span>
+    {hasText(rest) && <span className="sum-rest sum-dek">{rest}</span>}
+    {by && <span className="label sum-by">{by}</span>}
+  </> : <>
     <span className="sum-head">{head}</span>
     {rest && <span className="sum-rest"> {rest}</span>}
-    {item && <span className="story-arrow" aria-hidden="true">↗</span>}
+    {arrow}
   </>;
   return (
     <li className="sum-row rise" style={{ "--i":i + 3 }}>
@@ -71,7 +84,7 @@ export function BriefPage({ items, isMobile }) {
     return vals.map(v => v / max);
   }, [items]);
 
-  const summaries = (digest?.categories || []).filter(c => hasText(c.summary));
+  const summaries = (digest?.categories || []).filter(c => hasText(c.headline) || hasText(c.summary));
   const pool = useMemo(() => [...(digest?.categories || []).flatMap(c => c.items || []), ...items], [items, digest]);
   const ready = !loading && !error;
 
