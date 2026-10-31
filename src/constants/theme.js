@@ -2,6 +2,22 @@
 // GitHub Pages doesn't redirect after a repo rename, so update this (or set VITE_DATA_URL) when pulse-backend is renamed.
 export const DATA_URL = import.meta.env.VITE_DATA_URL || "https://divvyanshush.github.io/pulse-backend";
 
+// Temporary, while the data moves to data.cobunai.com: if one source fails, try the next.
+// The last stop is a snapshot shipped with the site, so the page never goes blank mid-switch.
+const DATA_FALLBACKS = ["https://data.cobunai.com", "/data-snapshot"];
+
+export async function fetchData(name) {
+  let err;
+  for(const base of [DATA_URL, ...DATA_FALLBACKS]) {
+    try{
+      const res = await fetch(`${base}/${name}`);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }catch(e){ err = e; }
+  }
+  throw err;
+}
+
 export const timeAgo = ts => {
   const s = Math.max(0, Math.floor(Date.now()/1000 - ts));
   if(s<60)    return `${s}s`;

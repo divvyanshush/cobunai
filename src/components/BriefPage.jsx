@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { DATA_URL, hasText, updatedAgo, decode } from "../constants/theme.js";
+import { fetchData, hasText, updatedAgo, decode } from "../constants/theme.js";
 import { Signal } from "./Signal.jsx";
 import { usePullToRefresh } from "../hooks/usePullToRefresh.js";
 import { PullIndicator } from "./Shared.jsx";
@@ -50,8 +50,7 @@ export function BriefPage({ items, isMobile }) {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
 
-  const fetchDigest = () => fetch(`${DATA_URL}/digest.json`)
-    .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+  const fetchDigest = () => fetchData("digest.json")
     .then(d => { setDigest(d); setLoading(false); })
     .catch(e => { setError(e.message); setLoading(false); });
 
