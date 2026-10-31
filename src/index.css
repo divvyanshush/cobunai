@@ -93,6 +93,10 @@ button:focus{outline:none}
 .sum-text{display:block;margin:0;font-size:18px;line-height:1.55;overflow-wrap:anywhere}
 .sum-head{color:var(--text);font-weight:500}
 .sum-rest{color:var(--sub)}
+/* News rows: the dek and byline sit under the headline */
+.sum-dek{display:block;margin-top:4px;font-size:.89em}
+.sum-by{display:block;margin-top:10px;font-size:13px}
+.sum-end{white-space:nowrap}
 a.sum-text:hover .sum-head{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;text-decoration-color:var(--line-2)}
 a.sum-text:hover .story-arrow{opacity:1;transform:none}
 
