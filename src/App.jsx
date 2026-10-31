@@ -79,16 +79,8 @@ export default function App() {
     loadPreferences().then(prefs=>{
       if(!prefs) return;
       if(prefs.dark_mode!==null) setIsDark(prefs.dark_mode);
-      if(prefs.email_digest!==null && prefs.email_digest!==undefined) setEmailDigest(prefs.email_digest);
     });
   },[user]);
-
-  const [emailDigest, setEmailDigest] = useState(false);
-
-  const toggleEmailDigest = useCallback(()=>{
-    if(!user) return;
-    setEmailDigest(d=>{ const n=!d; savePreferences({email_digest:n}); return n; });
-  },[savePreferences, user]);
 
   const toggleDark = useCallback(()=>{
     if(isIframe) return;
@@ -152,7 +144,7 @@ export default function App() {
         C={C} isDark={isDark} page={page} setPage={setPage}
         user={user} setShowAuth={setShowAuth}
         bmCount={Object.keys(bookmarks).length}
-        toggleDark={toggleDark} emailDigest={emailDigest} toggleEmailDigest={toggleEmailDigest} onSignOut={signOut}
+        toggleDark={toggleDark} onSignOut={signOut}
         isMobile={isMobile}
       />
 
