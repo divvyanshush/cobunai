@@ -32,61 +32,49 @@ export const FS = {
 };
 
 export const FF = {
-  sans: "'IBM Plex Sans', sans-serif",
-  mono: "'IBM Plex Mono', 'Fira Mono', monospace",
+  sans: "'Instrument Sans', system-ui, -apple-system, sans-serif",
+  mono: "'IBM Plex Mono', ui-monospace, monospace",
 };
 
+// Monochrome, after the Cobun AI moodboard: black, white hairlines, one electric-blue accent.
+// App mirrors these onto CSS variables (--bg, --text, …) for the stylesheet.
 export const DARK = {
-  text:"#ececec",   // 93% white — primary, easy on eyes
-  sub:"#a8a8a8",    // 66% white — secondary text
-  muted:"#787878",  // 47% white — tertiary, still readable
-  faint:"#333333",  // borders and dividers only
-  bg:"#141414", surface:"#1c1c1c", hover:"#242424", border:"#2e2e2e",
-  accent:"#ececec", accentDim:"rgba(255,255,255,0.05)", accentBorder:"rgba(255,255,255,0.12)",
+  text:"#f2f2f0",
+  sub:"#a6a6a3",
+  muted:"#6f6f6c",
+  faint:"#2a2a2a",  // stronger hairline
+  bg:"#000000", surface:"#0a0a0a", hover:"#111111", border:"#1c1c1c",
+  accent:"#4d6bff", accentDim:"rgba(77,107,255,0.10)", accentBorder:"rgba(255,255,255,0.14)",
   light:false,
 };
 
 export const LIGHT = {
-  text:"#1a1a1a",   // soft black — not harsh
-  sub:"#4a4a4a",    // clear secondary
-  muted:"#717171",  // readable tertiary
-  faint:"#e2e2e2",  // borders only
-  bg:"#ffffff", surface:"#f7f7f7", hover:"#f0f0f0", border:"#e4e4e4",
-  accent:"#1a1a1a", accentDim:"rgba(0,0,0,0.04)", accentBorder:"rgba(0,0,0,0.12)",
+  text:"#0b0b0b",
+  sub:"#4b4b49",
+  muted:"#8b8b88",
+  faint:"#dcdcda",
+  bg:"#ffffff", surface:"#f7f7f6", hover:"#f1f1f0", border:"#ebebea",
+  accent:"#2347ff", accentDim:"rgba(35,71,255,0.07)", accentBorder:"rgba(0,0,0,0.12)",
   light:true,
 };
 
-export const TM_DARK = {
-  model:    {label:"MODELS",    a:"rgba(34,211,238,0.08)",   b:"rgba(34,211,238,0.15)",   t:"#22d3ee"},
-  research: {label:"RESEARCH", a:"rgba(96,165,250,0.08)",  b:"rgba(96,165,250,0.15)",  t:"#60a5fa"},
-  funding:  {label:"FUNDING",  a:"rgba(250,204,21,0.08)",  b:"rgba(250,204,21,0.15)",  t:"#facc15"},
-  product:  {label:"TOOLS",     a:"rgba(167,139,250,0.08)", b:"rgba(167,139,250,0.15)", t:"#a78bfa"},
-  tool:     {label:"TOOLS",     a:"rgba(167,139,250,0.08)", b:"rgba(167,139,250,0.15)", t:"#a78bfa"},
-  policy:   {label:"POLICY",   a:"rgba(251,146,60,0.08)",  b:"rgba(251,146,60,0.15)",  t:"#fb923c"},
-  repo:     {label:"REPO",     a:"rgba(52,211,153,0.08)",   b:"rgba(52,211,153,0.15)",   t:"#34d399"},
-  discuss:  {label:"DISCUSS",  a:"rgba(100,116,139,0.08)",  b:"rgba(100,116,139,0.15)",  t:"#94a3b8"},
+// Titles and summaries can arrive with HTML entities (&#x2F;, &amp;) from the source feeds
+let decoder;
+export const decode = s => {
+  if(!s || !s.includes("&")) return s || "";
+  decoder ??= document.createElement("textarea");
+  decoder.innerHTML = s;
+  return decoder.value;
 };
 
-export const TM_LIGHT = {
-  model:    {label:"MODELS",    a:"rgba(34,211,238,0.12)",  b:"rgba(34,211,238,0.22)",  t:"#0e7490"},
-  research: {label:"RESEARCH", a:"rgba(96,165,250,0.12)",  b:"rgba(96,165,250,0.22)",  t:"#1d4ed8"},
-  funding:  {label:"FUNDING",  a:"rgba(250,204,21,0.15)",  b:"rgba(250,204,21,0.25)",  t:"#92400e"},
-  product:  {label:"TOOLS",    a:"rgba(167,139,250,0.12)", b:"rgba(167,139,250,0.22)", t:"#6d28d9"},
-  tool:     {label:"TOOLS",    a:"rgba(167,139,250,0.12)", b:"rgba(167,139,250,0.22)", t:"#6d28d9"},
-  policy:   {label:"POLICY",   a:"rgba(251,146,60,0.12)",  b:"rgba(251,146,60,0.22)",  t:"#c2410c"},
-  repo:     {label:"REPO",     a:"rgba(5,150,105,0.12)",   b:"rgba(5,150,105,0.22)",   t:"#047857"},
-  discuss:  {label:"DISCUSS",  a:"rgba(100,116,139,0.12)", b:"rgba(100,116,139,0.22)", t:"#334155"},
-};
-
-export const getTM = (isDark) => isDark ? TM_DARK : TM_LIGHT;
-
-export const SRC_COLORS = {
-  Reddit:"#ff4500",
-  ProductHunt:"#da552f",
-  HN:"#ff6314", arXiv:"#e05555", "Dev.to":"#5b6df8",
-  GitHub:"#9b72e8", "Lobste.rs":"#d44040", OpenAI:"#19c37d",
-  Anthropic:"#d4845a", HuggingFace:"#ffb020", VentureBeat:"#3d8fe0",
-  TechCrunch:"#2ab858", TheVerge:"#e84040", Wired:"#aaaaaa", MITReview:"#cc3333",
-  SimonW:"#1a8cff", Interconnects:"#e06030", AINnews:"#cc2244", Microsoft:"#0078d4",
-  GoogleResearch:"#4285f4", MetaAI:"#0668E1", TDS:"#1a8c6b", MarkTechPost:"#7b2ff7",
+// A headline plus one supporting line. Elsewhere sum is a noisy feed excerpt, so the line is `why`;
+// for GitHub it's the repo description (in sum, or after " — " in titles from before the backend fix).
+export const storyText = item => {
+  let title = decode(item.title), desc = hasText(item.why) ? item.why : "";
+  if(item.src === "GitHub") {
+    const [name, ...rest] = title.split(" — ");
+    title = name;
+    desc = (hasText(item.sum) && item.sum !== "No description." ? item.sum : rest.join(" — ")) || desc;
+  }
+  return { title, desc: decode(desc) };
 };

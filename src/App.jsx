@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { DATA_URL, FF, DARK, LIGHT } from "./constants/theme.js";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
+import { DATA_URL, DARK, LIGHT } from "./constants/theme.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { Auth } from "./components/Auth.jsx";
-import { Detail } from "./components/Detail.jsx";
 import { useBookmarks } from "./hooks/useBookmarks.js";
 import { usePreferences } from "./hooks/usePreferences.js";
 import { TopBar } from "./components/TopBar.jsx";
@@ -33,7 +32,6 @@ export default function App() {
   const [loading,   setLoading]  = useState(true);
   const [feedError, setFeedError]= useState(null);
   const [feedAt,    setFeedAt]   = useState(null);
-  const [detail,    setDetail]   = useState(null);
   const [showAuth,  setShowAuth] = useState(false);
   const [winW,      setWinW]     = useState(()=>typeof window!=="undefined"?window.innerWidth:1200);
 
@@ -44,19 +42,21 @@ export default function App() {
   },[]);
   const isMobile = winW < 640;
 
-  const [readIds, setReadIds] = useState(()=>{
-    try{ return new Set(JSON.parse(sessionStorage.getItem("pulse-read")||"[]")); }
-    catch(e){ return new Set(); }
-  });
-
   const C = isDark ? DARK : LIGHT;
+
+  // The stylesheet reads colours from CSS variables; mirror the active theme onto :root
+  useLayoutEffect(()=>{
+    const vars = { bg:C.bg, surface:C.surface, hover:C.hover, line:C.border, "line-2":C.faint,
+      text:C.text, sub:C.sub, muted:C.muted, accent:C.accent };
+    for(const [k,v] of Object.entries(vars)) document.documentElement.style.setProperty(`--${k}`, v);
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  },[C, isDark]);
   const { user, loading:authLoading, signUp, signIn, signOut } = useAuth();
   const { bookmarks, loadBookmarks, toggleBookmark } = useBookmarks(user);
   const { loadPreferences, savePreferences } = usePreferences(user);
 
   const setPage = useCallback((p)=>{
     setPageRaw(p);
-    setDetail(null);
     try{ sessionStorage.setItem("pulse-page",p); }catch(e){}
   },[]);
 
@@ -100,16 +100,7 @@ export default function App() {
     toggleBookmark(item);
   },[toggleBookmark,user]);
 
-  const handleItemClick = useCallback((item)=>{
-    setDetail(item);
-    setReadIds(r=>{
-      const n=new Set([...r,item.id]);
-      try{sessionStorage.setItem("pulse-read",JSON.stringify([...n]));}catch(e){}
-      return n;
-    });
-  },[]);
-
-  if(authLoading) return <div style={{minHeight:"100vh",background:DARK.bg}}/>;
+  if(authLoading) return <div style={{minHeight:"100vh",background:C.bg}}/>;
 
   // Route: /login — show auth, redirect to /app if already signed in
   if(currentPath === "/login") {
@@ -121,21 +112,14 @@ export default function App() {
     }} C={C} isDark={isDark}/>;
   }
 
-
-
-  const shared = {
-    C, isDark, items, loading, bookmarks, readIds, user, detail,
-    onItemClick:handleItemClick, onBookmark:handleBookmark, isMobile,
-  };
-  const sources = <SourcesPage C={C} isDark={isDark} items={items} loading={loading} error={feedError} updatedAt={feedAt} onRetry={loadFeed}/>;
+  const shared = { items, bookmarks, onBookmark:handleBookmark, isMobile };
+  const sources = <SourcesPage items={items} loading={loading} error={feedError} updatedAt={feedAt} onRetry={loadFeed}/>;
 
   return (
     <div style={{
       display:"flex", flexDirection:"column",
       height:"100dvh", width:"100vw", overflow:"hidden", paddingTop:"env(safe-area-inset-top)",
-      background:C.bg, color:C.text,
-      fontFamily:FF.sans,
-      WebkitFontSmoothing:"antialiased",
+      background:"var(--bg)", color:"var(--text)",
     }}>
 
       {/* ── Top bar ── */}
@@ -187,42 +171,12 @@ export default function App() {
                 <div style={{flex:1, display:"flex", flexDirection:"column", overflow:"hidden", height:"100%"}}>
                   {page==="brief" && <BriefPage {...shared}/>}
                   {page==="sources" && sources}
-                  {page==="saved" && (user ? <SavedPage {...shared}/> : <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{fontSize:14,color:C.muted}}>Sign in to view saved items</div><button onClick={()=>setShowAuth(true)} style={{padding:"8px 24px",background:C.text,color:C.bg,border:"none",cursor:"pointer",fontSize:13,fontWeight:600,fontFamily:"inherit"}}>Sign In</button></div>)}
+                  {page==="saved" && (user ? <SavedPage {...shared}/> : <div className="page" style={{alignItems:"center",justifyContent:"center",gap:16}}><div className="meta">Sign in to see saved items</div><button className="signin" onClick={()=>setShowAuth(true)}>Sign in</button></div>)}
                 </div>
               )}
             </div>
           );
         })()}
-
-        {/* Detail panel */}
-        {detail && (
-          <div
-            onTouchStart={e=>{ touchStartX.current=e.touches[0].clientX; touchStartY.current=e.touches[0].clientY; }}
-            onTouchEnd={e=>{
-              if(!isMobile) return;
-              const dx = e.changedTouches[0].clientX - touchStartX.current;
-              const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
-              if(dx > 60 && dy < 80) setDetail(null);
-            }}
-            style={{
-            width: isMobile?"100%":380,
-            minWidth: isMobile?"100%":380,
-            position: isMobile?"absolute":"relative",
-            inset: isMobile?0:"auto",
-            zIndex: isMobile?100:"auto",
-            borderLeft: isMobile?"none":`1px solid ${C.border}`,
-            overflowY:"auto", overflowX:"hidden",
-            background:C.surface,
-            height:"100%",
-          }}>
-            <Detail
-              item={detail} C={C} isDark={isDark}
-              isBookmarked={!!bookmarks[detail.id]}
-              onBookmark={handleBookmark}
-              onClose={()=>setDetail(null)}
-            />
-          </div>
-        )}
       </div>
 
       {/* Auth modal */}

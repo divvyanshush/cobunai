@@ -1,8 +1,7 @@
 // Curated source → category mapping for the Sources mind map.
 // `src` matches item.src from /feed. `label` is only a fallback: an item's srcLabel wins when present.
-// `tone` picks a colour from the type palette in theme.js (getTM).
 export const SOURCE_MAP = [
-  { id:"labs", label:"Labs & Companies", tone:"model", sources:[
+  { id:"labs", label:"Labs & Companies", sources:[
     { src:"OpenAI",         label:"OpenAI Blog" },
     { src:"DeepMind",       label:"DeepMind Blog" },
     { src:"GoogleResearch", label:"Google Research" },
@@ -10,28 +9,28 @@ export const SOURCE_MAP = [
     { src:"TogetherAI",     label:"Together AI" },
     { src:"LangChain",      label:"LangChain Blog" },
   ]},
-  { id:"research", label:"Research", tone:"research", sources:[
+  { id:"research", label:"Research", sources:[
     { src:"arXiv",          label:"arXiv" },
     { src:"LilianWeng",     label:"Lilian Weng" },
     { src:"Raschka",        label:"Sebastian Raschka" },
     { src:"AlignmentForum", label:"Alignment Forum" },
     { src:"LessWrong",      label:"LessWrong" },
   ]},
-  { id:"builders", label:"Builders & Newsletters", tone:"tool", sources:[
+  { id:"builders", label:"Builders & Newsletters", sources:[
     { src:"Karpathy",       label:"Andrej Karpathy" },
     { src:"SimonW",         label:"Simon Willison" },
     { src:"Interconnects",  label:"Interconnects" },
     { src:"LastWeekInAI",   label:"Last Week in AI" },
   ]},
-  { id:"community", label:"Community", tone:"discuss", sources:[
+  { id:"community", label:"Community", sources:[
     { src:"HN",             label:"Hacker News" },
     { src:"Lobste.rs",      label:"Lobste.rs" },
     { src:"Dev.to",         label:"Dev.to" },
   ]},
-  { id:"repos", label:"Repos", tone:"repo", sources:[
+  { id:"repos", label:"Repos", sources:[
     { src:"GitHub",         label:"GitHub" },
   ]},
-  { id:"media", label:"Media", tone:"policy", sources:[
+  { id:"media", label:"Media", sources:[
     { src:"TechCrunch",     label:"TechCrunch AI" },
     { src:"TheVerge",       label:"The Verge AI" },
     { src:"Wired",          label:"Wired AI" },

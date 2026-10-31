@@ -1,99 +1,73 @@
-import { useState, useEffect } from "react";
-import { DATA_URL, FF, FS, getTM, hasText, updatedAgo } from "../constants/theme.js";
-import { Row } from "./Row.jsx";
+import { useState, useEffect, useMemo } from "react";
+import { DATA_URL, hasText, updatedAgo, decode, timeAgo } from "../constants/theme.js";
+import { Story } from "./Story.jsx";
+import { Signal } from "./Signal.jsx";
 import { usePullToRefresh, PullIndicator } from "./Shared.jsx";
 
 const TOP_N = 3;
+const EVEN = Array(26).fill(0.35);
 
-function DigestSection({ cat, C, isDark, onItemClick, onBookmark, bookmarks, readIds, detail }) {
-  const [open, setOpen] = useState(false);
-  const TML = getTM(isDark);
-  const m = TML[cat.id] || TML.product;
-  const items = cat.items || [];
-  const shown = open ? items : items.slice(0, TOP_N);
-  const rest = items.length - TOP_N;
+// First sentence of at least 40 characters: what the story is, without the generated "matters because" tail
+const firstSentence = s => (s.match(/^.{40,}?[.!?](?=\s|$)/) || [s])[0];
 
-  const toggleStyle = {
-    background: "none",
-    border: `1px solid ${C.border}`,
-    padding: "3px 10px",
-    cursor: "pointer",
-    color: C.muted,
-    fontSize: FS.xs,
-    fontFamily: FF.sans,
-    letterSpacing: "0.06em",
-    borderRadius: 2,
-    transition: "all .1s",
-  };
+// The digest intro reads "headline — what it is. This matters because …". Split off the headline
+// and, when it matches a real item, link it.
+function leadStory(intro, pool) {
+  const text = decode(intro);
+  const [head, ...rest] = text.split(" — ");
+  if(!rest.length || head.length > 90) return { title:null, dek:firstSentence(text), item:null };
+  const h = head.toLowerCase();
+  const item = pool.find(i => {
+    const t = (i.title || "").toLowerCase();
+    return t && (t === h || t.startsWith(h) || h.startsWith(t));
+  });
+  return { title:head, dek:firstSentence(rest.join(" — ")), item };
+}
 
+function Lead({ intro, pool }) {
+  const { title, dek, item } = useMemo(() => leadStory(intro, pool), [intro, pool]);
   return (
-    <div style={{ borderBottom: "none" }}>
-
-      {/* Header — always visible */}
-      <div style={{ padding: "18px 16px 14px" }}>
-
-        {/* Label row */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-        }}>
-          <span style={{
-            fontSize: FS.sm, fontWeight: 700,
-            color: m.t, letterSpacing: "0.12em",
-            fontFamily: FF.sans,
-          }}>{cat.label.toUpperCase()}</span>
-        </div>
-
-        {/* AI summary */}
-        {hasText(cat.summary) && (
-          <div style={{
-            fontSize: FS.base,
-            fontWeight: 400,
-            color: C.text,
-            lineHeight: 1.75,
-            fontFamily: FF.sans,
-            borderLeft: `2px solid ${m.t}`,
-            paddingLeft: 12,
-            marginTop: 10,
-          }}>{cat.summary}</div>
-        )}
-      </div>
-
-      {/* Top items, the rest behind a toggle — visually separated */}
-      {shown.length > 0 && (
-        <div style={{
-          borderTop: `1px solid ${C.border}`,
-          background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
-        }}>
-          {shown.map((item, i) => (
-            <Row
-              key={item.id} item={item} i={i}
-              C={C} isDark={isDark}
-              onClick={() => onItemClick(item)}
-              isBookmarked={!!bookmarks[item.id]}
-              onBookmark={onBookmark}
-              selected={detail?.id === item.id}
-              isRead={readIds.has(item.id)}
-            />
-          ))}
-          {rest > 0 && (
-            <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.border}` }}>
-              <button
-                onClick={() => setOpen(o => !o)}
-                style={toggleStyle}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.sub; e.currentTarget.style.color = C.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
-              >
-                {open ? "↑ collapse" : `↓ ${rest} more`}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <section className="lead rise" style={{ "--i":1 }}>
+      <div className="meta">Top story</div>
+      {title && (item
+        ? <a className="lead-title" href={item.link} target="_blank" rel="noreferrer">{title}</a>
+        : <h1 className="lead-title">{title}</h1>)}
+      <p className="lead-dek">{dek}</p>
+      {item && <div className="meta lead-meta">{item.srcLabel || item.src}{item.time > 0 && ` · ${timeAgo(item.time)}`}</div>}
+    </section>
   );
 }
 
-export function BriefPage({ C, isDark, onItemClick, onBookmark, bookmarks, readIds, detail, isMobile }) {
+function Section({ cat, n, bookmarks, onBookmark }) {
+  const [open, setOpen] = useState(false);
+  const items = cat.items || [];
+  const rest = items.slice(TOP_N);
+  const story = item => (
+    <Story key={item.id} item={item} isBookmarked={!!bookmarks[item.id]} onBookmark={onBookmark}/>
+  );
+
+  return (
+    <section className="section rise" style={{ "--i":n + 2 }}>
+      <header className="section-head">
+        <span className="meta">{String(n + 1).padStart(2, "0")}</span>
+        <h2 className="section-name">{cat.label}</h2>
+        <span className="meta">{items.length}</span>
+      </header>
+      {items.slice(0, TOP_N).map(story)}
+      {rest.length > 0 && <>
+        <div className="extra" data-open={open} inert={!open}>
+          <div>{rest.map(story)}</div>
+        </div>
+        <button className="more meta" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+          <span className="more-sign" aria-hidden="true">+</span>
+          {open ? "Show less" : `${rest.length} more`}
+        </button>
+      </>}
+    </section>
+  );
+}
+
+export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
   const [digest,  setDigest]  = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -110,82 +84,53 @@ export function BriefPage({ C, isDark, onItemClick, onBookmark, bookmarks, readI
 
   const ptr = usePullToRefresh(loadDigest, isMobile);
 
-  const freshness = digest?.generatedAt ? updatedAgo(digest.generatedAt) : null;
+  // One line per source in the header graphic, weighted by how much each carried today
+  const weights = useMemo(() => {
+    if(!items.length) return EVEN;
+    const counts = new Map();
+    for(const i of items) counts.set(i.src, (counts.get(i.src) || 0) + 1);
+    const vals = [...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
+    const max = Math.max(...vals);
+    return vals.map(v => v / max);
+  }, [items]);
+
+  const categories = digest?.categories || [];
+  const pool = useMemo(() => [...items, ...(digest?.categories || []).flatMap(c => c.items || [])], [items, digest]);
+  const ready = !loading && !error;
 
   return (
-    <div style={{ flex:1, display:"flex", flexDirection:"column", background:C.bg, overflow:"hidden", minWidth:0 }}>
+    <div className="page">
+      <div className="scroll" onTouchStart={ptr.onTouchStart} onTouchMove={ptr.onTouchMove} onTouchEnd={ptr.onTouchEnd}>
+        <PullIndicator progress={ptr.progress} pulling={ptr.pulling}/>
+        <div className="brief">
+          <Signal weights={weights}/>
+          <div className="brief-meta">
+            <span className="meta">{new Date().toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" })}</span>
+            {ready && digest?.generatedAt && <span className="meta">Updated {updatedAgo(digest.generatedAt)}</span>}
+          </div>
 
-      {/* Header */}
-      <div style={{ padding:"14px 16px", borderBottom:"none", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <span style={{ fontSize:FS.xs, color:C.muted, fontFamily:FF.sans, letterSpacing:"0.1em" }}>// brief</span>
-          {freshness && !loading && (
-            <span style={{ fontSize:FS.xs, color:C.muted, fontFamily:FF.sans, letterSpacing:"0.06em" }}>
-              updated {freshness}
-            </span>
+          {loading && [0, 1, 2].map(n => (
+            <div key={n} style={{ marginBottom:44 }}>
+              <div className="sk" style={{ width:80, height:10, marginBottom:16 }}/>
+              <div className="sk" style={{ width:"86%", height:18, marginBottom:10 }}/>
+              <div className="sk" style={{ width:"64%", height:18 }}/>
+            </div>
+          ))}
+
+          {error && (
+            <div className="empty meta">
+              Couldn’t load the brief<button className="retry meta" onClick={loadDigest}>Retry</button>
+            </div>
           )}
+
+          {ready && !categories.length && <div className="empty meta">No brief yet — check back soon</div>}
+
+          {ready && hasText(digest?.intro) && <Lead intro={digest.intro} pool={pool}/>}
+
+          {ready && categories.map((cat, n) => (
+            <Section key={cat.id} cat={cat} n={n} bookmarks={bookmarks} onBookmark={onBookmark}/>
+          ))}
         </div>
-        <span style={{ fontSize:FS.xs, color:C.muted, fontFamily:FF.sans }}>
-          {new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase()}
-        </span>
-      </div>
-
-      {/* Content */}
-      <div style={{ flex:1, overflowY:"auto" }} onTouchStart={ptr.onTouchStart} onTouchMove={ptr.onTouchMove} onTouchEnd={ptr.onTouchEnd}>
-        <PullIndicator progress={ptr.progress} pulling={ptr.pulling} C={C}/>
-        {loading && (
-          <div style={{"--sk-base":isDark?"#1e1e1e":"#efefef","--sk-highlight":isDark?"#2a2a2a":"#e0e0e0"}}>
-            {[1,2,3,4].map(n=>(
-              <div key={n} style={{padding:"20px 16px",borderBottom:"none"}}>
-                <div style={{display:"flex",gap:8,marginBottom:14}}>
-                  <div className="sk" style={{width:90,height:11,borderRadius:3}}/>
-                  <div className="sk" style={{width:32,height:11,borderRadius:3}}/>
-                </div>
-                <div className="sk" style={{width:"95%",height:16,marginBottom:8,borderRadius:3}}/>
-                <div className="sk" style={{width:"80%",height:16,marginBottom:8,borderRadius:3}}/>
-                <div className="sk" style={{width:"60%",height:16,marginBottom:16,borderRadius:3}}/>
-                <div className="sk" style={{width:"35%",height:13,marginBottom:10,borderRadius:3}}/>
-                <div className="sk" style={{width:"45%",height:13,marginBottom:10,borderRadius:3}}/>
-                <div className="sk" style={{width:"30%",height:13,marginBottom:16,borderRadius:3}}/>
-                <div className="sk" style={{width:90,height:26,borderRadius:3}}/>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {error && (
-          <div style={{padding:"32px 16px",color:C.muted,fontSize:FS.xs,fontFamily:FF.sans}}>
-            failed to load — {error}
-          </div>
-        )}
-
-        {!loading && !error && (!digest?.categories?.length) && (
-          <div style={{padding:"48px 16px", textAlign:"center"}}>
-            <div style={{fontSize:FS.sm, color:C.muted, fontFamily:FF.sans, marginBottom:8}}>no brief available</div>
-            <div style={{fontSize:FS.xs, color:C.faint, fontFamily:FF.sans}}>check back soon — content is still loading</div>
-          </div>
-        )}
-
-        {!loading && !error && hasText(digest?.intro) && (
-          <div style={{ padding: "6px 16px 4px" }}>
-            <div style={{
-              fontSize: FS.base, color: C.text, lineHeight: 1.75, fontFamily: FF.sans,
-              borderLeft: `2px solid ${C.text}`, paddingLeft: 12,
-            }}>{digest.intro}</div>
-          </div>
-        )}
-
-        {!loading && !error && digest?.categories?.map(cat => (
-          <DigestSection
-            key={cat.id} cat={cat}
-            C={C} isDark={isDark}
-            onItemClick={onItemClick}
-            onBookmark={onBookmark}
-            bookmarks={bookmarks}
-            readIds={readIds}
-            detail={detail}
-          />
-        ))}
       </div>
     </div>
   );
