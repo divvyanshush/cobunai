@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { DATA_URL } from "./constants/theme.js";
+import { fetchData } from "./constants/theme.js";
 import { TopBar } from "./components/TopBar.jsx";
 
 import { SourcesPage } from "./components/SourcesPage.jsx";
@@ -46,9 +46,7 @@ export default function App() {
   const loadFeed = useCallback(async()=>{
     try{
       setLoading(true); setFeedError(null);
-      const res=await fetch(`${DATA_URL}/feed.json`);
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data=await res.json();
+      const data=await fetchData("feed.json");
       setItems(data.items||[]);
     }catch(e){
       setFeedError(e.message);
