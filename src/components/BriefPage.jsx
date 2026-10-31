@@ -105,7 +105,6 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
   const summaries = categories.filter(c => hasText(c.summary));
   const pool = useMemo(() => [...(digest?.categories || []).flatMap(c => c.items || []), ...items], [items, digest]);
   const ready = !loading && !error;
-  const sourceCount = items.length ? weights.length : 0;
 
   return (
     <div className="page">
@@ -120,18 +119,10 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
               {ready && digest?.generatedAt && ` · Updated ${updatedAgo(digest.generatedAt)}`}
             </div>
             <h1 className="hero-title">Today in AI</h1>
-            <p className="hero-sub">
-              What changed for people building with AI, distilled from {sourceCount
-                ? `${items.length} updates across ${sourceCount} sources`
-                : "today’s AI news"}.
-            </p>
+            <p className="hero-sub">What changed today for people building with AI.</p>
           </header>
 
           <Signal weights={weights}/>
-          <div className="signal-legend">
-            <span className="meta">{sourceCount ? `${sourceCount} sources` : "Sources"}</span>
-            <span className="meta">1 brief</span>
-          </div>
 
           {loading && [0, 1, 2].map(n => (
             <div key={n} style={{ marginBottom:36 }}>

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { timeAgo, updatedAgo, storyText } from "../constants/theme.js";
+import { timeAgo, storyText } from "../constants/theme.js";
 import { SOURCE_MAP } from "../constants/sources.js";
 import { useSize } from "./Shared.jsx";
 
@@ -75,7 +75,7 @@ function ItemList({ items }) {
   });
 }
 
-function RadialMap({ tree, w, h, loading, total, selected, onSelect }) {
+function RadialMap({ tree, w, h, loading, selected, onSelect }) {
   const [hover, setHover] = useState(null);  // a source's src or a category's id
   const { cx, cy, H, labelW, cats, nodes } = useMemo(() => radialLayout(tree, w, h), [tree, w, h]);
   const catPos = new Map(cats.map(c => [c.id, c]));
@@ -101,7 +101,7 @@ function RadialMap({ tree, w, h, loading, total, selected, onSelect }) {
 
       <div className="map-center" style={{ left:cx, top:cy }}><span className="core"/></div>
       <div className="meta" style={{ position:"absolute", left:cx, top:cy + 18, transform:"translateX(-50%)", whiteSpace:"nowrap" }}>
-        {loading ? "Loading" : `${total} items`}
+        {loading ? "Loading" : "Sources"}
       </div>
 
       {cats.map(c => (
@@ -212,7 +212,7 @@ function TreeMap({ tree, loading, open, onToggle }) {
   );
 }
 
-export function SourcesPage({ items, loading, error, updatedAt, onRetry }) {
+export function SourcesPage({ items, loading, error, onRetry }) {
   const bodyRef = useRef(null);
   const { w: pageW, h: pageH } = useSize(bodyRef);
   const [selected, setSelected] = useState(null);  // radial: the source shown in the side panel
@@ -235,7 +235,6 @@ export function SourcesPage({ items, loading, error, updatedAt, onRetry }) {
   }, [items]);
 
   const all = tree.flatMap(c => c.sources);
-  const total = all.reduce((a, s) => a + s.items.length, 0);
 
   const radial = pageW >= TREE_BELOW;
   const inlinePanel = pageW - PANEL_W >= RADIAL_MIN;
@@ -251,17 +250,16 @@ export function SourcesPage({ items, loading, error, updatedAt, onRetry }) {
 
   return (
     <div className="page">
-      <div className="src-head">
-        {error
-          ? <span className="meta">Couldn’t load sources<button className="retry meta" onClick={onRetry}>Retry</button></span>
-          : <span className="meta">{all.length} sources{!loading && ` · ${total} items`}</span>}
-        {!error && updatedAt && <span className="meta">Updated {updatedAgo(updatedAt)}</span>}
-      </div>
+      {error && (
+        <div className="src-head">
+          <span className="meta">Couldn’t load sources<button className="retry meta" onClick={onRetry}>Retry</button></span>
+        </div>
+      )}
 
       <div ref={bodyRef} style={{ flex:1, display:"flex", overflow:"hidden", position:"relative", minWidth:0 }}>
         <div className="scroll" style={{ minWidth:0 }}>
           {pageW > 0 && (radial
-            ? <RadialMap tree={tree} w={mapW} h={pageH} loading={loading} total={total}
+            ? <RadialMap tree={tree} w={mapW} h={pageH} loading={loading}
                 selected={sel?.src} onSelect={setSelected}/>
             : <TreeMap tree={tree} loading={loading} open={open} onToggle={toggle}/>
           )}

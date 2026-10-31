@@ -31,7 +31,6 @@ export default function App() {
   const [items,     setItems]    = useState([]);
   const [loading,   setLoading]  = useState(true);
   const [feedError, setFeedError]= useState(null);
-  const [feedAt,    setFeedAt]   = useState(null);
   const [showAuth,  setShowAuth] = useState(false);
   const [winW,      setWinW]     = useState(()=>typeof window!=="undefined"?window.innerWidth:1200);
 
@@ -67,7 +66,6 @@ export default function App() {
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data=await res.json();
       setItems(data.items||[]);
-      setFeedAt(data.generatedAt||null);
     }catch(e){
       setFeedError(e.message);
     }finally{ setLoading(false); }
@@ -113,7 +111,7 @@ export default function App() {
   }
 
   const shared = { items, bookmarks, onBookmark:handleBookmark, isMobile };
-  const sources = <SourcesPage items={items} loading={loading} error={feedError} updatedAt={feedAt} onRetry={loadFeed}/>;
+  const sources = <SourcesPage items={items} loading={loading} error={feedError} onRetry={loadFeed}/>;
 
   return (
     <div style={{
