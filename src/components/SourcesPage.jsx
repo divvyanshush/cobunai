@@ -1,16 +1,36 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { timeAgo, storyText } from "../constants/theme.js";
 import { SOURCE_MAP } from "../constants/sources.js";
 import { useSize } from "../hooks/useSize.js";
 
 const TREE_BELOW = 760;   // narrower than this, the map is a vertical branch tree
-const PANEL_W    = 380;   // width of the source's items panel
-const RADIAL_MIN = 820;   // map width the radial layout needs beside an inline panel; below it the panel overlays
 const ROW        = 32;    // vertical pitch of source nodes in the radial layout
 const CAT_GAP    = 24;
 const PAD_Y      = 40;
+const DAY        = 86400;
 
 const host = url => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } };
+// The source's id in the URL: ?source=arxiv, ?source=lobsters
+const slug = src => src.toLowerCase().replace(/[^a-z0-9]/g, "");
+const plural = (n, w) => n === 1 ? w : /[^aeiou]y$/.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`;
+
+const thisWeek = ts => Date.now() / 1000 - ts < 7 * DAY;
+
+// An item's byline: "3h ago" this week, then a date ("12 Oct", or "Mar 2025" from another year)
+const when = ts => {
+  if(thisWeek(ts)) return `${timeAgo(ts)} ago`;
+  const d = new Date(ts * 1000);
+  return d.getFullYear() === new Date().getFullYear()
+    ? d.toLocaleDateString("en-GB", { day:"numeric", month:"short" })
+    : d.toLocaleDateString("en-GB", { month:"short", year:"numeric" });
+};
+
+// How long a quiet source has been quiet: "9 days ago", "3 weeks ago", "6 months ago", "2 years ago"
+const quietFor = ts => {
+  const d = Math.floor((Date.now() / 1000 - ts) / DAY);
+  const [n, unit] = d < 14 ? [d, "day"] : d < 60 ? [Math.floor(d / 7), "week"] : d < 365 ? [Math.floor(d / 30), "month"] : [Math.floor(d / 365), "year"];
+  return `${n} ${plural(n, unit)} ago`;
+};
 
 // Split the ring of categories into two contiguous arcs with row counts as even as possible, so the
 // map balances left/right and every source label can run horizontally outward without colliding.
@@ -61,21 +81,7 @@ const curve = (x1, y1, x2, y2) => {
   return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
 };
 
-function ItemList({ items }) {
-  return items.map(item => {
-    const { title, desc } = storyText(item);
-    const site = host(item.link);
-    return (
-      <a key={item.id} className="item" href={item.link} target="_blank" rel="noreferrer">
-        <div className="item-title">{title}</div>
-        {desc && <div className="item-desc">{desc}</div>}
-        <div className="meta">{item.time > 0 && timeAgo(item.time)}{item.time > 0 && site && " · "}{site}</div>
-      </a>
-    );
-  });
-}
-
-function RadialMap({ tree, w, h, loading, selected, onSelect }) {
+function RadialMap({ tree, w, h, loading, onOpen }) {
   const [hover, setHover] = useState(null);  // a source's src or a category's id
   const { cx, cy, H, labelW, cats, nodes } = useMemo(() => radialLayout(tree, w, h), [tree, w, h]);
   const catPos = new Map(cats.map(c => [c.id, c]));
@@ -87,14 +93,14 @@ function RadialMap({ tree, w, h, loading, selected, onSelect }) {
       <svg width={w} height={H} style={{ position:"absolute", inset:0, display:"block" }} aria-hidden="true">
         {cats.map((c, i) => (
           <path key={c.id} d={curve(cx, cy, c.x, c.y)} pathLength="1" style={{ "--i":i }}
-            className={`edge cat${hotCat(c.id) ? " hot" : ""}${selected && nodes.some(n => n.src === selected && n.cat.id === c.id) ? " on" : ""}`}/>
+            className={`edge cat${hotCat(c.id) ? " hot" : ""}`}/>
         ))}
         {nodes.map((n, i) => {
           const c = catPos.get(n.cat.id);
           const empty = !loading && !n.items.length;
           return (
             <path key={n.src} d={curve(c.x, c.y, n.x, n.y)} pathLength="1" style={{ "--i":cats.length + i }}
-              className={`edge${empty ? " empty" : ""}${hotSrc(n) ? " hot" : ""}${selected === n.src ? " on" : ""}`}/>
+              className={`edge${empty ? " empty" : ""}${hotSrc(n) ? " hot" : ""}`}/>
           );
         })}
       </svg>
@@ -115,10 +121,9 @@ function RadialMap({ tree, w, h, loading, selected, onSelect }) {
       {nodes.map((n, i) => {
         const count = n.items.length;
         const empty = !loading && !count;
-        const on = selected === n.src;
         return (
-          <button key={n.src} className="node" onClick={() => onSelect(on ? null : n.src)} disabled={loading || empty}
-            title={empty ? "No items in the current feed" : undefined} aria-pressed={on}
+          <button key={n.src} className="node" onClick={() => onOpen(n.src)} disabled={loading || empty}
+            title={empty ? "No items in the current feed" : undefined}
             onMouseEnter={() => setHover(n.src)} onMouseLeave={() => setHover(null)}
             style={{ "--i":i, left:n.x, top:n.y, maxWidth:labelW,
               transform: n.dir > 0 ? "translateY(-50%)" : "translate(-100%,-50%)",
@@ -133,24 +138,62 @@ function RadialMap({ tree, w, h, loading, selected, onSelect }) {
   );
 }
 
-function SourcePanel({ source, cat, overlay, onClose }) {
+// A source's own page, on the Today grid: who it is on the left, everything it published on the right
+function SourceView({ source, cat, loading, onBack }) {
+  const items = source.items;
+  const noun = source.noun || cat.noun;
+  const week = items.filter(i => thisWeek(i.time)).length;
+  const line = loading ? null
+    : week ? `${week} ${plural(week, noun)} this week`
+    : items.length ? `Last ${noun} ${quietFor(items[0].time)}`
+    : "Nothing in the current feed";
+
   return (
-    <aside className={`panel${overlay ? " overlay" : ""}`} aria-label={`${source.label} items`}>
-      <div className="panel-head">
-        <div className="panel-top">
-          <button className="panel-close label" onClick={onClose}>
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 2L4 6l4 4"/></svg>
-            Close
-          </button>
-          <span className="label">{source.items.length} {source.items.length === 1 ? "item" : "items"}</span>
-        </div>
-        <div className="label">{cat.label}</div>
-        <div className="panel-title">{source.label}</div>
+    <div className="brief src-page">
+      <div className="brief-intro">
+        <a className="src-back label" href="?tab=sources"
+          onClick={e => { if(e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); onBack(); }}>
+          <span aria-hidden="true">←</span> All sources
+        </a>
+        <header className="hero rise">
+          <div className="label">{cat.label}</div>
+          <h1 className="hero-title">{source.label}</h1>
+          <p className="hero-sub">
+            {line && <>{line}<span className="src-sep"> · </span></>}
+            <a className="src-site" href={source.site} target="_blank" rel="noreferrer">{host(source.site)} ↗</a>
+          </p>
+        </header>
       </div>
-      <div style={{ padding:"6px 0 32px" }}>
-        <ItemList items={source.items}/>
+
+      <div className="brief-main">
+        {loading && (
+          <div className="src-items">
+            {[0, 1, 2, 3, 4].map(n => (
+              <div key={n}>
+                <div className="sk" style={{ width:"84%", height:18, marginBottom:10 }}/>
+                <div className="sk" style={{ width:56, height:10 }}/>
+              </div>
+            ))}
+          </div>
+        )}
+        {!loading && items.length > 0 && (
+          <ol className="src-items" aria-label={`${source.label}, newest first`}>
+            {items.map((item, i) => {
+              const { title, desc } = storyText(item);
+              return (
+                <li key={item.id} className="src-item rise" style={{ "--i":Math.min(i, 10) + 2 }}>
+                  <a href={item.link} target="_blank" rel="noreferrer">
+                    <span className="src-title">{title}<span className="story-arrow" aria-hidden="true">↗</span></span>
+                    {desc && <span className="src-why">{desc}</span>}
+                    {item.time > 0 && <span className="meta">{when(item.time)}</span>}
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -165,7 +208,7 @@ function Branch({ last, mid, children }) {
   );
 }
 
-function TreeMap({ tree, loading, open, onToggle }) {
+function TreeMap({ tree, loading, onOpen }) {
   return (
     <div className="tree">
       <div style={{ display:"flex", alignItems:"center", gap:12, height:40 }}>
@@ -182,25 +225,14 @@ function TreeMap({ tree, loading, open, onToggle }) {
               {cat.sources.map((s, si) => {
                 const count = s.items.length;
                 const empty = !loading && !count;
-                const isOpen = open.has(s.src);
                 return (
                   <Branch key={s.src} last={si === cat.sources.length - 1} mid={22}>
-                    <button className="tree-row" onClick={() => onToggle(s.src)} disabled={loading || empty} aria-expanded={isOpen}>
+                    <button className="tree-row" onClick={() => onOpen(s.src)} disabled={loading || empty}>
                       <span className="dot"/>
                       <span className="label">{s.label}</span>
                       {!loading && <span className="meta">{count}</span>}
                       <span className="chev meta" aria-hidden="true">{empty ? "" : "›"}</span>
                     </button>
-                    {isOpen && (
-                      <div className="tree-items">
-                        <ItemList items={s.items}/>
-                        {count > 5 && (
-                          <button className="more label" onClick={() => onToggle(s.src)}>
-                            <span className="more-sign" aria-hidden="true">−</span>Collapse
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </Branch>
                 );
               })}
@@ -212,11 +244,11 @@ function TreeMap({ tree, loading, open, onToggle }) {
   );
 }
 
-export function SourcesPage({ items, loading, error, onRetry }) {
+export function SourcesPage({ items, loading, error, onRetry, source, onOpen, onClose }) {
   const bodyRef = useRef(null);
+  const scrollRef = useRef(null);
+  const mapScroll = useRef(0);  // where the map was scrolled to, for coming back from a source
   const { w: pageW, h: pageH } = useSize(bodyRef);
-  const [selected, setSelected] = useState(null);  // radial: the source shown in the side panel
-  const [open, setOpen] = useState(() => new Set()); // tree: sources expanded inline
 
   // Curated categories → sources, each with its items newest first. Sources outside SOURCE_MAP are ignored.
   const tree = useMemo(() => {
@@ -234,19 +266,18 @@ export function SourcesPage({ items, loading, error, onRetry }) {
     }));
   }, [items]);
 
-  const all = tree.flatMap(c => c.sources);
+  const cat = source ? tree.find(c => c.sources.some(s => slug(s.src) === source.toLowerCase())) : null;
+  const sel = cat?.sources.find(s => slug(s.src) === source.toLowerCase());
+  const selSrc = sel?.src;
+
+  // A source opens at its top; the map comes back where it was left
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if(el) el.scrollTop = selSrc ? 0 : mapScroll.current;
+  }, [selSrc]);
 
   const radial = pageW >= TREE_BELOW;
-  const inlinePanel = pageW - PANEL_W >= RADIAL_MIN;
-  const sel = radial && selected ? all.find(s => s.src === selected) : null;
-  const selCat = sel && tree.find(c => c.sources.includes(sel));
-  const mapW = sel && inlinePanel ? pageW - PANEL_W : pageW;
-
-  const toggle = src => setOpen(o => {
-    const n = new Set(o);
-    if(n.has(src)) n.delete(src); else n.add(src);
-    return n;
-  });
+  const open = src => { mapScroll.current = scrollRef.current.scrollTop; onOpen(slug(src)); };
 
   return (
     <div className="page">
@@ -257,16 +288,14 @@ export function SourcesPage({ items, loading, error, onRetry }) {
       )}
 
       <div ref={bodyRef} style={{ flex:1, display:"flex", overflow:"hidden", position:"relative", minWidth:0 }}>
-        <div className="scroll" style={{ minWidth:0 }}>
-          {pageW > 0 && (radial
-            ? <RadialMap tree={tree} w={mapW} h={pageH} loading={loading}
-                selected={sel?.src} onSelect={setSelected}/>
-            : <TreeMap tree={tree} loading={loading} open={open} onToggle={toggle}/>
-          )}
+        <div ref={scrollRef} className="scroll" style={{ minWidth:0 }}>
+          {sel
+            ? <SourceView key={sel.src} source={sel} cat={cat} loading={loading} onBack={onClose}/>
+            : pageW > 0 && (radial
+              ? <RadialMap tree={tree} w={pageW} h={pageH} loading={loading} onOpen={open}/>
+              : <TreeMap tree={tree} loading={loading} onOpen={open}/>
+            )}
         </div>
-        {sel && (
-          <SourcePanel key={sel.src} source={sel} cat={selCat} overlay={!inlinePanel} onClose={() => setSelected(null)}/>
-        )}
       </div>
     </div>
   );
