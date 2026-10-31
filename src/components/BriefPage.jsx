@@ -1,44 +1,52 @@
 import { useState, useEffect, useMemo } from "react";
-import { DATA_URL, hasText, updatedAgo, decode, timeAgo } from "../constants/theme.js";
+import { DATA_URL, hasText, updatedAgo, decode } from "../constants/theme.js";
 import { Story } from "./Story.jsx";
 import { Signal } from "./Signal.jsx";
 import { usePullToRefresh, PullIndicator } from "./Shared.jsx";
 
 const TOP_N = 3;
 const EVEN = Array(26).fill(0.35);
+const SHORT = { model:"Models", tool:"Tools", research:"Research", repo:"Repos", discuss:"Community", funding:"Business" };
 
-// First sentence of at least 40 characters: what the story is, without the generated "matters because" tail
-const firstSentence = s => (s.match(/^.{40,}?[.!?](?=\s|$)/) || [s])[0];
-
-// The digest intro reads "headline — what it is. This matters because …". Split off the headline
-// and, when it matches a real item, link it.
-function leadStory(intro, pool) {
-  const text = decode(intro);
-  const [head, ...rest] = text.split(" — ");
-  if(!rest.length || head.length > 90) return { title:null, dek:firstSentence(text), item:null };
-  const h = head.toLowerCase();
-  const item = pool.find(i => {
-    const t = (i.title || "").toLowerCase();
-    return t && (t === h || t.startsWith(h) || h.startsWith(t));
-  });
-  return { title:head, dek:firstSentence(rest.join(" — ")), item };
+// A category summary reads "Headline — detail" or "Headline. Detail." Split it so the headline reads first.
+function splitSummary(s) {
+  const text = decode(s).trim();
+  const dash = text.indexOf(" — ");
+  if(dash > 0 && dash < 120) return [text.slice(0, dash), text.slice(dash + 3)];
+  const m = text.match(/^.{20,}?[.!?](?=\s|$)/);
+  return m ? [m[0], text.slice(m[0].length).trim()] : [text, ""];
 }
 
-function Lead({ intro, pool }) {
-  const { title, dek, item } = useMemo(() => leadStory(intro, pool), [intro, pool]);
+// The item a summary is about, matched on the start of its title, so the line can link to it
+const norm = s => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function findItem(head, pool) {
+  const h = norm(head).slice(0, 28);
+  if(h.length < 8) return null;
+  return pool.find(i => {
+    const t = norm(i.title);
+    return t && (t.startsWith(h) || h.startsWith(t.slice(0, 28)));
+  }) || null;
+}
+
+function SummaryRow({ cat, pool, i }) {
+  const [head, rest] = splitSummary(cat.summary);
+  const item = findItem(head, pool);
+  const body = <>
+    <span className="sum-head">{head}</span>
+    {rest && <span className="sum-rest"> {rest}</span>}
+    {item && <span className="story-arrow" aria-hidden="true">↗</span>}
+  </>;
   return (
-    <section className="lead rise" style={{ "--i":1 }}>
-      <div className="meta">Top story</div>
-      {title && (item
-        ? <a className="lead-title" href={item.link} target="_blank" rel="noreferrer">{title}</a>
-        : <h1 className="lead-title">{title}</h1>)}
-      <p className="lead-dek">{dek}</p>
-      {item && <div className="meta lead-meta">{item.srcLabel || item.src}{item.time > 0 && ` · ${timeAgo(item.time)}`}</div>}
-    </section>
+    <li className="sum-row rise" style={{ "--i":i + 3 }}>
+      <span className="meta sum-label">{SHORT[cat.id] || cat.label}</span>
+      {item
+        ? <a className="sum-text" href={item.link} target="_blank" rel="noreferrer">{body}</a>
+        : <p className="sum-text">{body}</p>}
+    </li>
   );
 }
 
-function Section({ cat, n, bookmarks, onBookmark }) {
+function Section({ cat, bookmarks, onBookmark }) {
   const [open, setOpen] = useState(false);
   const items = cat.items || [];
   const rest = items.slice(TOP_N);
@@ -47,10 +55,9 @@ function Section({ cat, n, bookmarks, onBookmark }) {
   );
 
   return (
-    <section className="section rise" style={{ "--i":n + 2 }}>
+    <section className="section">
       <header className="section-head">
-        <span className="meta">{String(n + 1).padStart(2, "0")}</span>
-        <h2 className="section-name">{cat.label}</h2>
+        <h3 className="section-name">{cat.label}</h3>
         <span className="meta">{items.length}</span>
       </header>
       {items.slice(0, TOP_N).map(story)}
@@ -72,15 +79,15 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
 
-  const loadDigest = () => {
-    setLoading(true); setError(null);
-    fetch(`${DATA_URL}/digest.json`)
-      .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(d => { setDigest(d); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
-  };
+  const fetchDigest = () => fetch(`${DATA_URL}/digest.json`)
+    .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(d => { setDigest(d); setLoading(false); })
+    .catch(e => { setError(e.message); setLoading(false); });
 
-  useEffect(() => { loadDigest(); }, []);
+  // Retry and pull-to-refresh; the first load starts with loading already true
+  const loadDigest = () => { setLoading(true); setError(null); fetchDigest(); };
+
+  useEffect(() => { fetchDigest(); }, []);
 
   const ptr = usePullToRefresh(loadDigest, isMobile);
 
@@ -95,25 +102,42 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
   }, [items]);
 
   const categories = digest?.categories || [];
-  const pool = useMemo(() => [...items, ...(digest?.categories || []).flatMap(c => c.items || [])], [items, digest]);
+  const summaries = categories.filter(c => hasText(c.summary));
+  const pool = useMemo(() => [...(digest?.categories || []).flatMap(c => c.items || []), ...items], [items, digest]);
   const ready = !loading && !error;
+  const sourceCount = items.length ? weights.length : 0;
 
   return (
     <div className="page">
       <div className="scroll" onTouchStart={ptr.onTouchStart} onTouchMove={ptr.onTouchMove} onTouchEnd={ptr.onTouchEnd}>
         <PullIndicator progress={ptr.progress} pulling={ptr.pulling}/>
         <div className="brief">
+
+          {/* What this is */}
+          <header className="hero rise">
+            <div className="meta">
+              {new Date().toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" })}
+              {ready && digest?.generatedAt && ` · Updated ${updatedAgo(digest.generatedAt)}`}
+            </div>
+            <h1 className="hero-title">Today in AI</h1>
+            <p className="hero-sub">
+              What changed for people building with AI, distilled from {sourceCount
+                ? `${items.length} updates across ${sourceCount} sources`
+                : "today’s AI news"}.
+            </p>
+          </header>
+
           <Signal weights={weights}/>
-          <div className="brief-meta">
-            <span className="meta">{new Date().toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" })}</span>
-            {ready && digest?.generatedAt && <span className="meta">Updated {updatedAgo(digest.generatedAt)}</span>}
+          <div className="signal-legend">
+            <span className="meta">{sourceCount ? `${sourceCount} sources` : "Sources"}</span>
+            <span className="meta">1 brief</span>
           </div>
 
           {loading && [0, 1, 2].map(n => (
-            <div key={n} style={{ marginBottom:44 }}>
-              <div className="sk" style={{ width:80, height:10, marginBottom:16 }}/>
+            <div key={n} style={{ marginBottom:36 }}>
+              <div className="sk" style={{ width:80, height:10, marginBottom:14 }}/>
               <div className="sk" style={{ width:"86%", height:18, marginBottom:10 }}/>
-              <div className="sk" style={{ width:"64%", height:18 }}/>
+              <div className="sk" style={{ width:"60%", height:18 }}/>
             </div>
           ))}
 
@@ -125,11 +149,27 @@ export function BriefPage({ items, bookmarks, onBookmark, isMobile }) {
 
           {ready && !categories.length && <div className="empty meta">No brief yet — check back soon</div>}
 
-          {ready && hasText(digest?.intro) && <Lead intro={digest.intro} pool={pool}/>}
+          {/* Just what matters: one line per topic */}
+          {ready && summaries.length > 0 && <>
+            <div className="block-head rise" style={{ "--i":2 }}>
+              <h2 className="block-title">Summary</h2>
+              <span className="meta">The short version</span>
+            </div>
+            <ul className="summary">
+              {summaries.map((cat, i) => <SummaryRow key={cat.id} cat={cat} pool={pool} i={i}/>)}
+            </ul>
+          </>}
 
-          {ready && categories.map((cat, n) => (
-            <Section key={cat.id} cat={cat} n={n} bookmarks={bookmarks} onBookmark={onBookmark}/>
-          ))}
+          {/* Everything else, for going deeper */}
+          {ready && categories.length > 0 && <>
+            <div className="block-head">
+              <h2 className="block-title">Headlines</h2>
+              <span className="meta">By topic</span>
+            </div>
+            {categories.map(cat => (
+              <Section key={cat.id} cat={cat} bookmarks={bookmarks} onBookmark={onBookmark}/>
+            ))}
+          </>}
         </div>
       </div>
     </div>
