@@ -2,8 +2,8 @@
 // on its own domain, so renaming the repo never moves the data.
 export const DATA_URL = import.meta.env.VITE_DATA_URL || "https://data.cobunai.com";
 
-export async function fetchData(name) {
-  const res = await fetch(`${DATA_URL}/${name}`);
+export async function fetchData(name, init) {
+  const res = await fetch(`${DATA_URL}/${name}`, init);
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }

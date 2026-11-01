@@ -67,12 +67,18 @@ export function BriefPage({ items, isMobile }) {
     .then(d => { setDigest(d); setLoading(false); })
     .catch(e => { setError(e.message); setLoading(false); });
 
-  // Retry and pull-to-refresh; the first load starts with loading already true
+  // Retry; the first load starts with loading already true
   const loadDigest = () => { setLoading(true); setError(null); fetchDigest(); };
 
   useEffect(() => { fetchDigest(); }, []);
 
-  const ptr = usePullToRefresh(loadDigest, isMobile);
+  // Pull-to-refresh keeps the brief on screen and swaps the new one in, or leaves it as it is if the
+  // request fails. no-cache: browsers may reuse a copy for 10 minutes, so ask the host for a newer one.
+  const refreshDigest = () => fetchData("digest.json", { cache:"no-cache" })
+    .then(d => { setDigest(d); setError(null); setLoading(false); })
+    .catch(() => {});
+
+  const ptr = usePullToRefresh(refreshDigest, isMobile);
 
   // One line per source in the header graphic, weighted by how much each carried today
   const weights = useMemo(() => {
@@ -90,8 +96,8 @@ export function BriefPage({ items, isMobile }) {
 
   return (
     <div className="page">
-      <div className="scroll" onTouchStart={ptr.onTouchStart} onTouchMove={ptr.onTouchMove} onTouchEnd={ptr.onTouchEnd}>
-        <PullIndicator progress={ptr.progress} pulling={ptr.pulling}/>
+      <div className="scroll" onTouchStart={ptr.onTouchStart} onTouchMove={ptr.onTouchMove} onTouchEnd={ptr.onTouchEnd} onTouchCancel={ptr.onTouchCancel}>
+        <PullIndicator dist={ptr.dist} progress={ptr.progress} phase={ptr.phase} weights={weights}/>
         <div className="brief">
 
           {/* What this is — stays in view beside the summary on wide screens */}
