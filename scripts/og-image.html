@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Source of public/og-image.png (the link preview image, 1200×630). Render with:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars \
+       --window-size=1200,630 --virtual-time-budget=5000 --screenshot=public/og-image.png scripts/og-image.html -->
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500&display=block" rel="stylesheet">
+<style>
+  html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#000}
+  svg{display:block}
+  text{font-family:'Instrument Sans',sans-serif;font-weight:500;font-size:44px;fill:#f2f2f0;letter-spacing:-.01em}
+</style>
+</head>
+<body>
+<svg id="og" width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <g id="lines" fill="none" stroke="#f2f2f0"></g>
+  <!-- Logo mark from TopBar.jsx, scaled 5×, with the accent dot at its centre -->
+  <g transform="translate(325 250) scale(5)">
+    <path d="M17.3636 8.1815C18.627 9.44704 19.3366 11.1622 19.3366 12.9504C19.3366 14.7386 18.627 16.4537 17.3636 17.7193M20.5451 5C22.6521 7.10941 23.8356 9.96893 23.8356 12.9504C23.8356 15.9318 22.6521 18.7913 20.5451 20.9007M8.29047 20.983C6.18349 18.8736 5 16.014 5 13.0325C5 10.0511 6.18349 7.19158 8.29047 5.08217M11.472 17.8015C10.2086 16.5359 9.49904 14.8207 9.49904 13.0325C9.49904 11.2443 10.2086 9.5292 11.472 8.26366" stroke="#f2f2f0" stroke-width="2.25" stroke-linecap="round" fill="none"/>
+    <circle cx="14.42" cy="12.99" r="1.9" fill="#4d6bff"/>
+  </g>
+  <line x1="472" y1="315" x2="532" y2="315" stroke="#f2f2f0" stroke-opacity=".8" stroke-width="1.5"/>
+  <text x="562" y="300">AI news from everywhere,</text>
+  <text x="562" y="354">in one brief.</text>
+</svg>
+<script>
+  // The Today page's Signal: one hairline per source, brighter the more it carried, converging on the mark
+  const g = document.getElementById("lines"), n = 26, fx = 342, fy = 315;
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const y = 40 + 550 * i / (n - 1), p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", `M0,${y} C${fx * .45},${y} ${fx * .6},${fy} ${fx},${fy}`);
+    p.setAttribute("stroke-opacity", (0.12 + 0.5 * rnd()).toFixed(2));
+    p.setAttribute("stroke-width", "1.25");
+    g.appendChild(p);
+  }
+</script>
+</body>
+</html>

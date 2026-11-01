@@ -1,34 +1,10 @@
 {
+  "cleanUrls": true,
   "rewrites": [
-    {
-      "source": "/app",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/app/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/app", "destination": "/" },
+    { "source": "/app/:path*", "destination": "/" }
   ],
-  "routes": [
-    {
-      "src": "^/$",
-      "dest": "/landing-final.html"
-    },
-    {
-      "src": "^/app$",
-      "dest": "/index.html"
-    },
-    {
-      "src": "^/app/(.*)$",
-      "dest": "/index.html"
-    },
-    {
-      "src": "^/login$",
-      "dest": "/index.html"
-    },
-    {
-      "src": "^/(.*)$",
-      "dest": "/$1"
-    }
+  "redirects": [
+    { "source": "/login", "destination": "/", "permanent": true }
   ]
 }
