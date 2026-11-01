@@ -107,6 +107,21 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 .empty{padding:48px 0;color:var(--muted)}
 .retry{margin-left:10px;color:var(--text);text-decoration:underline;text-underline-offset:3px}
 
+/* Pull to refresh (phones): its height follows the finger, then eases back, and the lines retract with it */
+.pull{display:flex;align-items:center;overflow:hidden;color:var(--text);transition:height .45s var(--ease)}
+.pull[data-phase="pulling"]{transition:none}
+.pull svg{display:block;flex-shrink:0;overflow:visible}
+.pull path{fill:none;stroke:currentColor}
+.pull .ln{stroke-width:1;stroke-dasharray:1}
+.pull:not([data-phase="pulling"]) .ln{transition:stroke-dashoffset .4s var(--ease)}
+.pull .focus{fill:var(--muted);transform-box:fill-box;transform-origin:center;transition:fill .2s,transform .35s var(--ease)}
+.pull[data-ready="true"] .focus{fill:var(--accent);transform:scale(1.3)}
+.pull .halo{fill:none;stroke:var(--accent);stroke-opacity:.5;opacity:0;transition:opacity .25s}
+.pull[data-ready="true"] .halo{opacity:1}
+.pull[data-phase="refreshing"] .halo{animation:breathe 1.4s ease-in-out infinite}
+.pull .pulse{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:.06 .94;animation:travel 1.1s linear infinite;animation-delay:calc(var(--d) * -1.1s)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
 /* ── Sources ────────────────────────────────────────────── */
 .src-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px var(--gutter);flex-shrink:0}
 
@@ -185,5 +200,5 @@ a.sum-text:hover .story-arrow{opacity:1;transform:none}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-  .signal .pulse{display:none}
+  .signal .pulse,.pull .pulse{display:none}
 }
