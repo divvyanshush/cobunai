@@ -3,7 +3,7 @@ import { fetchData, hasText, updatedAgo, timeAgo, decode } from "../constants/th
 import { SOURCE_MAP } from "../constants/sources.js";
 import { Signal } from "./Signal.jsx";
 import { usePullToRefresh } from "../hooks/usePullToRefresh.js";
-import { PullIndicator } from "./Shared.jsx";
+import { PullGap } from "./Shared.jsx";
 
 const EVEN = Array(26).fill(0.35);
 const SHORT = { model:"Models", tool:"Tools", research:"Research", repo:"Repos", discuss:"Community", funding:"Business" };
@@ -97,7 +97,7 @@ export function BriefPage({ items, isMobile }) {
   return (
     <div className="page">
       <div className="scroll" onTouchStart={ptr.onTouchStart} onTouchMove={ptr.onTouchMove} onTouchEnd={ptr.onTouchEnd} onTouchCancel={ptr.onTouchCancel}>
-        <PullIndicator dist={ptr.dist} progress={ptr.progress} phase={ptr.phase} weights={weights}/>
+        <PullGap dist={ptr.dist} phase={ptr.phase}/>
         <div className="brief">
 
           {/* What this is — stays in view beside the summary on wide screens */}
@@ -110,7 +110,7 @@ export function BriefPage({ items, isMobile }) {
               <h1 className="hero-title">Today in AI</h1>
               <p className="hero-sub">What changed today for people building with AI.</p>
             </header>
-            <Signal weights={weights}/>
+            <Signal weights={weights} pull={ptr}/>
           </div>
 
           {/* What matters: one takeaway per topic, each linking to its story */}
